@@ -1,4 +1,5 @@
-// Modern Login Screen Component for FixFlow CRM
+// Login Screen Component for FixFlow CRM
+// Uses Firebase Authentication (Email/Password)
 
 import { storage } from '../utils/storage.js';
 
@@ -28,37 +29,23 @@ export function renderLoginScreen() {
         <form id="form-login" class="space-y-4">
           <div class="form-group mb-0">
             <label class="form-label">Email Address</label>
-            <input type="email" id="login-email" class="form-control" placeholder="name@fixflow.com" required value="owner@fixflow.com">
+            <input type="email" id="login-email" class="form-control" placeholder="name@fixflow.com" required autocomplete="email">
           </div>
 
           <div class="form-group mb-0">
             <label class="form-label">Password</label>
-            <input type="password" id="login-password" class="form-control" placeholder="••••••••" required value="owner123">
+            <input type="password" id="login-password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
           </div>
 
-          <button type="submit" class="btn btn-primary w-full py-3 text-sm font-bold shadow-lg shadow-blue-500/30" style="width: 100%;">
-            <span>Sign In to FixFlow</span>
+          <button type="submit" id="btn-login-submit" class="btn btn-primary w-full py-3 text-sm font-bold shadow-lg shadow-blue-500/30" style="width: 100%;">
+            <span id="btn-login-text">Sign In to FixFlow</span>
+            <span id="btn-login-spinner" class="hidden ml-2">⏳</span>
           </button>
         </form>
 
-        <!-- Quick Demo Login Presets -->
-        <div class="mt-6 pt-4 border-t border-slate-800">
-          <p class="text-2xs font-bold uppercase text-muted text-center mb-2.5 tracking-wider">Quick Demo One-Tap Login:</p>
-          <div class="grid grid-cols-2 gap-2">
-            <button class="btn btn-secondary btn-sm text-2xs demo-login-btn" data-email="owner@fixflow.com" data-pass="owner123">
-              👑 Owner
-            </button>
-            <button class="btn btn-secondary btn-sm text-2xs demo-login-btn" data-email="dispatch@fixflow.com" data-pass="dispatch123">
-              🎧 Dispatcher
-            </button>
-            <button class="btn btn-secondary btn-sm text-2xs demo-login-btn" data-email="mike@fixflow.com" data-pass="mike123">
-              🔧 Tech (Mike)
-            </button>
-            <button class="btn btn-secondary btn-sm text-2xs demo-login-btn" data-email="marcus@fixflow.com" data-pass="marcus123">
-              🔧 Tech (Marcus)
-            </button>
-          </div>
-        </div>
+        <p class="text-center text-xs text-muted mt-6">
+          Secured by <span class="text-blue-400 font-semibold">Firebase Authentication</span>
+        </p>
       </div>
     </div>
   `;
@@ -73,28 +60,37 @@ export function renderLoginScreen() {
 function attachLoginEvents() {
   const form = document.getElementById('form-login');
   if (form) {
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('login-email').value;
       const pass = document.getElementById('login-password').value;
-      attemptLogin(email, pass);
+      await attemptLogin(email, pass);
     });
   }
-
-  document.querySelectorAll('.demo-login-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const email = e.currentTarget.getAttribute('data-email');
-      const pass = e.currentTarget.getAttribute('data-pass');
-      attemptLogin(email, pass);
-    });
-  });
 }
 
-function attemptLogin(email, pass) {
+async function attemptLogin(email, pass) {
   const alertEl = document.getElementById('login-error-alert');
   const alertText = document.getElementById('login-error-text');
+  const submitBtn = document.getElementById('btn-login-submit');
+  const btnText = document.getElementById('btn-login-text');
+  const spinner = document.getElementById('btn-login-spinner');
 
-  const res = storage.login(email, pass);
+  // Hide previous error
+  if (alertEl) alertEl.classList.add('hidden');
+
+  // Show loading state
+  if (submitBtn) submitBtn.disabled = true;
+  if (btnText) btnText.textContent = 'Signing in...';
+  if (spinner) spinner.classList.remove('hidden');
+
+  const res = await storage.login(email, pass);
+
+  // Restore button state
+  if (submitBtn) submitBtn.disabled = false;
+  if (btnText) btnText.textContent = 'Sign In to FixFlow';
+  if (spinner) spinner.classList.add('hidden');
+
   if (!res.success) {
     if (alertEl && alertText) {
       alertText.textContent = res.error;

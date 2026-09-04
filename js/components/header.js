@@ -81,8 +81,8 @@ export function renderHeader() {
 function attachHeaderEvents() {
   const logoutBtn = document.getElementById('btn-logout');
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      storage.logout();
+    logoutBtn.addEventListener('click', async () => {
+      await storage.logout();
     });
   }
 

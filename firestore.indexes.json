@@ -1,0 +1,3 @@
+{
+  "rules": "service cloud.firestore {\n  match /databases/{database}/documents {\n    match /{document=**} {\n      allow read, write: if false;\n    }\n  }\n}"
+}

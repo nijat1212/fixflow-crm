@@ -5,7 +5,6 @@ export const INITIAL_USERS = [
     id: "user_owner",
     name: "Business Owner",
     email: "owner@fixflow.com",
-    password: "owner123",
     role: "owner",
     techId: null
   },
@@ -13,7 +12,6 @@ export const INITIAL_USERS = [
     id: "user_dispatch",
     name: "Sarah (Dispatch)",
     email: "dispatch@fixflow.com",
-    password: "dispatch123",
     role: "dispatcher",
     techId: null
   },
@@ -21,7 +19,6 @@ export const INITIAL_USERS = [
     id: "user_tech1",
     name: "Mike Miller",
     email: "mike@fixflow.com",
-    password: "mike123",
     role: "technician",
     techId: "tech_1"
   },
@@ -29,7 +26,6 @@ export const INITIAL_USERS = [
     id: "user_tech2",
     name: "Marcus Vance",
     email: "marcus@fixflow.com",
-    password: "marcus123",
     role: "technician",
     techId: "tech_2"
   }

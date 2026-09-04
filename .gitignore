@@ -1,0 +1,20 @@
+node_modules/
+dist/
+.DS_Store
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+
+# Firebase cache / emulator logs
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+
+# Test coverage & logs
+coverage/
+*.log
