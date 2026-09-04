@@ -1,7 +1,7 @@
 // FixFlow CRM — Storage Manager
 // Auth: Firebase Authentication (Email/Password)
-// Data: LocalStorage (Jobs, Shifts, Technicians)
-// Roles: Firestore with resilient Auth-based fallback
+// Data: LocalStorage (Jobs, Shifts, Technicians, Users)
+// Remote: Cloud Firestore (Users, Technicians) with resilient offline fallback
 
 import { INITIAL_JOBS, INITIAL_TECHNICIANS, INITIAL_USERS, generateSeedShifts } from '../mockData.js';
 import { auth, db } from '../firebase.js';
@@ -13,6 +13,7 @@ import {
 import {
   doc,
   getDoc,
+  setDoc,
   collection,
   getDocs
 } from 'firebase/firestore';
@@ -21,10 +22,11 @@ const STORAGE_KEYS = {
   SESSION: 'fixflow_session_v1',
   JOBS: 'fixflow_jobs_v1',
   TECHNICIANS: 'fixflow_techs_v1',
-  SHIFTS: 'fixflow_shifts_v1'
+  SHIFTS: 'fixflow_shifts_v1',
+  USERS: 'fixflow_users_v1'
 };
 
-// Known system roles fallback if Firestore document is not yet provisioned
+// Known system roles fallback
 const KNOWN_ROLES = {
   'owner@fixflow.com': { name: 'Business Owner', role: 'owner', techId: null },
   'dispatch@fixflow.com': { name: 'Sarah (Dispatch)', role: 'dispatcher', techId: null },
@@ -38,9 +40,10 @@ class StorageManager {
     this._sessionCache = null;
     this._initLocalData();
     this._watchAuthState();
+    this._syncFromFirestore();
   }
 
-  // Initialize LocalStorage data (jobs, shifts, techs) on first load
+  // Initialize LocalStorage data on first load
   _initLocalData() {
     if (!localStorage.getItem(STORAGE_KEYS.JOBS)) {
       localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(INITIAL_JOBS));
@@ -51,19 +54,57 @@ class StorageManager {
     if (!localStorage.getItem(STORAGE_KEYS.SHIFTS)) {
       localStorage.setItem(STORAGE_KEYS.SHIFTS, JSON.stringify(generateSeedShifts()));
     }
+    if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(INITIAL_USERS));
+    }
   }
 
-  // Resolve user profile from Firestore or fallback mapping
+  // Background sync of Firestore users into local cache
+  async _syncFromFirestore() {
+    try {
+      const snap = await getDocs(collection(db, 'users'));
+      if (!snap.empty) {
+        const firestoreUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const localUsers = this.getUsers();
+        
+        // Merge without duplicating emails
+        const merged = [...localUsers];
+        for (const fu of firestoreUsers) {
+          const idx = merged.findIndex(u => u.email.toLowerCase() === fu.email.toLowerCase());
+          if (idx >= 0) {
+            merged[idx] = { ...merged[idx], ...fu };
+          } else {
+            merged.push(fu);
+          }
+        }
+        localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(merged));
+        this.notify('users_changed', merged);
+      }
+    } catch (err) {
+      console.warn('[FixFlow] Firestore background sync notice:', err.message);
+    }
+  }
+
+  // Resolve user profile from Firestore or local users
   async _resolveProfile(firebaseUser) {
     const email = (firebaseUser.email || '').toLowerCase().trim();
+    const localUser = this.getUsers().find(u => u.email.toLowerCase() === email);
+
     const fallback = KNOWN_ROLES[email] || {
-      name: firebaseUser.displayName || email.split('@')[0] || 'User',
-      role: 'technician',
-      techId: null
+      name: localUser ? localUser.name : (firebaseUser.displayName || email.split('@')[0] || 'User'),
+      role: localUser ? localUser.role : 'technician',
+      techId: localUser ? localUser.techId : null
     };
 
     try {
-      const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+      // 1. Try fetching by uid
+      let userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+      
+      // 2. If not found by uid, try by email
+      if (!userDoc.exists() && email) {
+        userDoc = await getDoc(doc(db, 'users', email));
+      }
+
       if (userDoc.exists()) {
         const data = userDoc.data();
         return {
@@ -73,7 +114,7 @@ class StorageManager {
         };
       }
     } catch (err) {
-      console.warn('[FixFlow] Firestore read profile notice (using Auth profile):', err.message);
+      console.warn('[FixFlow] Firestore read profile notice (using Auth/Local profile):', err.message);
     }
 
     return {
@@ -180,9 +221,82 @@ class StorageManager {
     this.notify('session_changed', null);
   }
 
-  // Create user in Firebase Auth + Firestore (called from Staff panel)
+  // ── Staff Management & User Creation ────────────────────────────────────────
   async createUser(userData) {
-    return { success: false, error: 'Staff account creation is managed via Firebase Console.' };
+    try {
+      const cleanedEmail = userData.email.trim().toLowerCase();
+      
+      // 1. Check in local cache
+      const existingUsers = this.getUsers();
+      if (existingUsers.some(u => u.email.toLowerCase() === cleanedEmail)) {
+        return { success: false, error: 'A worker with this email address already exists.' };
+      }
+
+      // 2. Check in Firestore
+      try {
+        const userDocRef = doc(db, "users", cleanedEmail);
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
+          return { success: false, error: 'A worker with this email address already exists in Firestore.' };
+        }
+      } catch (fErr) {
+        console.warn('[FixFlow] Firestore check notice:', fErr.message);
+      }
+
+      const newUserId = `user_${Date.now()}`;
+      let techId = null;
+
+      // 3. If role is technician, create technician profile
+      if (userData.role === 'technician') {
+        const techs = this.getTechnicians();
+        techId = `tech_${techs.length + 1}`;
+        const newTech = {
+          id: techId,
+          name: userData.name,
+          phone: userData.phone || '(555) 000-0000',
+          email: cleanedEmail,
+          avatar: userData.name.split(' ').map(n => n[0] || '').join('').substring(0, 2).toUpperCase() || 'TK',
+          color: '#3b82f6',
+          specialties: ['General Repairs'],
+          rating: 5.0,
+          jobsCompletedThisMonth: 0,
+          revenueThisMonth: 0
+        };
+
+        // Save to Firestore technicians collection
+        try {
+          await setDoc(doc(db, "technicians", techId), newTech);
+        } catch (tErr) {
+          console.warn('[FixFlow] Firestore setDoc technician notice:', tErr.message);
+        }
+
+        // Save to LocalStorage technicians
+        this.saveTechnicians([...techs, newTech]);
+      }
+
+      const newUser = {
+        id: newUserId,
+        name: userData.name,
+        email: cleanedEmail,
+        password: userData.password,
+        role: userData.role,
+        techId: techId
+      };
+
+      // 4. Save to Firestore users collection
+      try {
+        await setDoc(doc(db, "users", cleanedEmail), newUser);
+      } catch (uErr) {
+        console.warn('[FixFlow] Firestore setDoc user notice:', uErr.message);
+      }
+
+      // 5. Save to LocalStorage users and notify UI
+      this.saveUsers([...existingUsers, newUser]);
+
+      return { success: true, user: newUser };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
   }
 
   // Active role helpers
@@ -196,17 +310,19 @@ class StorageManager {
     return s ? s.techId : null;
   }
 
-  // ── Users List ──────────────────────────────────────────────────────────────
-  async getUsers() {
+  // ── Users List (Synchronous for smooth UI rendering) ────────────────────────
+  getUsers() {
     try {
-      const snap = await getDocs(collection(db, 'users'));
-      if (!snap.empty) {
-        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      }
-    } catch (err) {
-      console.warn('[FixFlow] Firestore getUsers notice (using default staff):', err.message);
+      const u = localStorage.getItem(STORAGE_KEYS.USERS);
+      return u ? JSON.parse(u) : INITIAL_USERS;
+    } catch {
+      return INITIAL_USERS;
     }
-    return INITIAL_USERS;
+  }
+
+  saveUsers(users) {
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+    this.notify('users_changed', users);
   }
 
   // ── Technicians (LocalStorage) ──────────────────────────────────────────────
@@ -246,7 +362,7 @@ class StorageManager {
 
   getJobById(id) {
     const jobs = this.getJobs();
-    return jobs.find(j => j.id === id) || null;
+    return jobs.find(j => j.id === jobId);
   }
 
   saveJob(jobData) {
@@ -352,6 +468,7 @@ class StorageManager {
     localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(INITIAL_JOBS));
     localStorage.setItem(STORAGE_KEYS.TECHNICIANS, JSON.stringify(INITIAL_TECHNICIANS));
     localStorage.setItem(STORAGE_KEYS.SHIFTS, JSON.stringify(generateSeedShifts()));
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(INITIAL_USERS));
     this.notify('data_reset', null);
   }
 }

@@ -206,8 +206,16 @@ function attachModalGlobalEvents() {
   // Create Staff Form Submit
   const staffForm = document.getElementById('form-create-staff');
   if (staffForm) {
-    staffForm.addEventListener('submit', (e) => {
+    staffForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+
+      const submitBtn = staffForm.querySelector('button[type="submit"]');
+      const origBtnText = submitBtn ? submitBtn.innerText : 'Save Staff';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Creating account...';
+      }
+
       const formData = new FormData(staffForm);
       const userData = {
         name: formData.get('name'),
@@ -216,14 +224,20 @@ function attachModalGlobalEvents() {
         role: formData.get('role')
       };
 
-      const res = storage.createUser(userData);
+      const res = await storage.createUser(userData);
+
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerText = origBtnText;
+      }
+
       if (res.success) {
         document.getElementById('modal-create-staff').classList.remove('open');
         staffForm.reset();
 
         // Show SMS Credential Modal
         const smsBox = document.getElementById('sms-credential-box');
-        const smsText = `Hi ${res.user.name},\nHere are your FixFlow CRM login credentials:\n\nURL: http://localhost:8080\nRole: ${res.user.role.toUpperCase()}\nEmail: ${res.user.email}\nPassword: ${res.user.password}\n\nPlease save this message.`;
+        const smsText = `Hi ${res.user.name},\nHere are your FixFlow CRM login credentials:\n\nRole: ${res.user.role.toUpperCase()}\nEmail: ${res.user.email}\nPassword: ${res.user.password}\n\nPlease save this message.`;
         
         if (smsBox) {
           smsBox.innerText = smsText;
@@ -238,6 +252,7 @@ function attachModalGlobalEvents() {
         }
 
         document.getElementById('modal-staff-created').classList.add('open');
+        showToast(`Employee ${res.user.name} created successfully!`);
       } else {
         alert(res.error);
       }
