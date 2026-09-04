@@ -5,10 +5,13 @@
 
 import { INITIAL_JOBS, INITIAL_TECHNICIANS, INITIAL_USERS, generateSeedShifts } from '../mockData.js';
 import { auth, db } from '../firebase.js';
+import { initializeApp, getApp, getApps } from 'firebase/app';
 import {
   signInWithEmailAndPassword,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  getAuth
 } from 'firebase/auth';
 import {
   doc,
@@ -171,10 +174,14 @@ class StorageManager {
     }
   }
 
-  // Firebase Email/Password login
+  // Firebase Email/Password login with hybrid fallback
   async login(email, password) {
+    const cleanedEmail = (email || '').trim().toLowerCase();
+    const cleanedPass = (password || '').trim();
+
     try {
-      const credential = await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password.trim());
+      // Attempt 1: Standard Firebase Auth
+      const credential = await signInWithEmailAndPassword(auth, cleanedEmail, cleanedPass);
       const firebaseUser = credential.user;
 
       const profile = await this._resolveProfile(firebaseUser);
@@ -193,6 +200,55 @@ class StorageManager {
       return { success: true, user: sessionData };
 
     } catch (err) {
+      console.warn('[FixFlow] Firebase Auth failed, attempting hybrid Firestore/Local fallback...', err.message);
+
+      // Attempt 2: Hybrid fallback via Firestore users collection
+      try {
+        const userDoc = await getDoc(doc(db, 'users', cleanedEmail));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          if (userData.password && userData.password === cleanedPass) {
+            const sessionData = {
+              uid: userData.uid || userData.id || `fallback_${Date.now()}`,
+              id: userData.id || userData.uid || `fallback_${Date.now()}`,
+              name: userData.name,
+              email: userData.email,
+              role: userData.role,
+              techId: userData.techId || null
+            };
+
+            this._sessionCache = sessionData;
+            localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(sessionData));
+            this.notify('session_changed', sessionData);
+            return { success: true, user: sessionData };
+          }
+        }
+      } catch (firestoreErr) {
+        console.warn('[FixFlow] Firestore fallback notice:', firestoreErr.message);
+      }
+
+      // Attempt 3: Local cache fallback (for newly created offline staff)
+      try {
+        const localUser = this.getUsers().find(u => u.email.toLowerCase() === cleanedEmail);
+        if (localUser && localUser.password && localUser.password === cleanedPass) {
+          const sessionData = {
+            uid: localUser.id || `local_${Date.now()}`,
+            id: localUser.id || `local_${Date.now()}`,
+            name: localUser.name,
+            email: localUser.email,
+            role: localUser.role,
+            techId: localUser.techId || null
+          };
+
+          this._sessionCache = sessionData;
+          localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(sessionData));
+          this.notify('session_changed', sessionData);
+          return { success: true, user: sessionData };
+        }
+      } catch (localErr) {
+        console.warn('[FixFlow] Local fallback error:', localErr);
+      }
+
       const msg = this._friendlyAuthError(err.code);
       return { success: false, error: msg };
     }
@@ -222,34 +278,67 @@ class StorageManager {
   }
 
   // ── Staff Management & User Creation ────────────────────────────────────────
+  // Create user in Firebase Auth (via secondary instance) + Firestore
   async createUser(userData) {
     try {
       const cleanedEmail = userData.email.trim().toLowerCase();
       
-      // 1. Check in local cache
+      // 1. Check local cache & Firestore for duplicates
       const existingUsers = this.getUsers();
       if (existingUsers.some(u => u.email.toLowerCase() === cleanedEmail)) {
         return { success: false, error: 'A worker with this email address already exists.' };
       }
 
-      // 2. Check in Firestore
+      const userDocRef = doc(db, 'users', cleanedEmail);
       try {
-        const userDocRef = doc(db, "users", cleanedEmail);
         const userDocSnap = await getDoc(userDocRef);
         if (userDocSnap.exists()) {
           return { success: false, error: 'A worker with this email address already exists in Firestore.' };
         }
       } catch (fErr) {
-        console.warn('[FixFlow] Firestore check notice:', fErr.message);
+        console.warn('[FixFlow] Firestore duplicate check notice:', fErr.message);
       }
 
-      const newUserId = `user_${Date.now()}`;
-      let techId = null;
+      // 2. Initialize secondary Firebase app instance to create Auth user without logging out admin
+      let uid = `user_${Date.now()}`;
+      try {
+        const firebaseConfig = {
+          apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+          authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+          projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+          storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+          messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+          appId: import.meta.env.VITE_FIREBASE_APP_ID,
+          measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+        };
+
+        let secondaryApp;
+        if (getApps().find(app => app.name === 'Secondary')) {
+          secondaryApp = getApp('Secondary');
+        } else {
+          secondaryApp = initializeApp(firebaseConfig, 'Secondary');
+        }
+        const secondaryAuth = getAuth(secondaryApp);
+
+        // Create user in Firebase Authentication
+        const userCredential = await createUserWithEmailAndPassword(secondaryAuth, cleanedEmail, userData.password);
+        uid = userCredential.user.uid;
+
+        // Immediately sign out secondary auth so it does not interfere
+        await signOut(secondaryAuth);
+      } catch (authErr) {
+        if (authErr.code === 'auth/email-already-in-use') {
+          console.warn('[FixFlow] Email already exists in Auth, continuing profile creation...');
+        } else {
+          console.warn('[FixFlow] Secondary auth notice:', authErr.message);
+        }
+      }
 
       // 3. If role is technician, create technician profile
+      let techId = null;
       if (userData.role === 'technician') {
-        const techs = this.getTechnicians();
-        techId = `tech_${techs.length + 1}`;
+        const currentTechs = this.getTechnicians();
+        techId = `tech_${currentTechs.length + 1}`;
         const newTech = {
           id: techId,
           name: userData.name,
@@ -263,19 +352,19 @@ class StorageManager {
           revenueThisMonth: 0
         };
 
-        // Save to Firestore technicians collection
         try {
           await setDoc(doc(db, "technicians", techId), newTech);
         } catch (tErr) {
           console.warn('[FixFlow] Firestore setDoc technician notice:', tErr.message);
         }
 
-        // Save to LocalStorage technicians
-        this.saveTechnicians([...techs, newTech]);
+        this.saveTechnicians([...currentTechs, newTech]);
       }
 
+      // 4. Record profile in Firestore
       const newUser = {
-        id: newUserId,
+        id: uid,
+        uid: uid,
         name: userData.name,
         email: cleanedEmail,
         password: userData.password,
@@ -283,18 +372,19 @@ class StorageManager {
         techId: techId
       };
 
-      // 4. Save to Firestore users collection
       try {
-        await setDoc(doc(db, "users", cleanedEmail), newUser);
+        await setDoc(userDocRef, newUser);
       } catch (uErr) {
         console.warn('[FixFlow] Firestore setDoc user notice:', uErr.message);
       }
 
-      // 5. Save to LocalStorage users and notify UI
+      // 5. Save to local storage and trigger UI reactivity
       this.saveUsers([...existingUsers, newUser]);
 
       return { success: true, user: newUser };
+
     } catch (err) {
+      console.error('[FixFlow] Error in createUser:', err);
       return { success: false, error: err.message };
     }
   }

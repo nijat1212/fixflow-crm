@@ -237,7 +237,8 @@ function attachModalGlobalEvents() {
 
         // Show SMS Credential Modal
         const smsBox = document.getElementById('sms-credential-box');
-        const smsText = `Hi ${res.user.name},\nHere are your FixFlow CRM login credentials:\n\nRole: ${res.user.role.toUpperCase()}\nEmail: ${res.user.email}\nPassword: ${res.user.password}\n\nPlease save this message.`;
+        const loginUrl = window.location.origin || 'http://localhost:8080';
+        const smsText = `Hi ${res.user.name},\nHere are your FixFlow CRM login credentials:\n\nURL: ${loginUrl}\nRole: ${res.user.role.toUpperCase()}\nEmail: ${res.user.email}\nPassword: ${res.user.password}\n\nPlease save this message.`;
         
         if (smsBox) {
           smsBox.innerText = smsText;
