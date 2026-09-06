@@ -47,26 +47,28 @@ function renderApp() {
   if (!session) {
     // UNAUTHENTICATED: Render Login Screen
     if (desktopNav) desktopNav.classList.add('hidden');
-    if (mobileNav) mobileNav.style.display = 'none';
+    if (mobileNav) mobileNav.classList.add('hidden');
     renderLoginScreen();
     return;
   }
 
-  // AUTHENTICATED: Build Role-Based Navigation
+  // Validate allowed view for active user role
   if (session.role === 'technician') {
-    // Technician: Strip desktop nav bar, render mobile view strictly
-    if (desktopNav) desktopNav.classList.add('hidden');
-    if (mobileNav) mobileNav.style.display = 'flex';
-    currentView = 'technician';
-    renderTechnicianDashboard();
-    return;
+    if (!['technician', 'calendar'].includes(currentView)) {
+      currentView = 'technician';
+    }
+  } else if (session.role === 'dispatcher') {
+    if (!['dispatcher', 'calendar'].includes(currentView)) {
+      currentView = 'dispatcher';
+    }
   }
 
-  // Owner or Dispatcher
+  // Show nav wrappers
   if (desktopNav) desktopNav.classList.remove('hidden');
-  if (mobileNav) mobileNav.style.display = 'none';
+  if (mobileNav) mobileNav.classList.remove('hidden');
 
   renderNavigationTabs(session.role);
+  renderMobileNav(session.role);
   renderCurrentView();
 }
 
@@ -95,10 +97,6 @@ function renderNavigationTabs(role) {
       </div>
     `;
   } else if (role === 'dispatcher') {
-    // Dispatcher: Lock out Analytics and Manage Staff
-    if (!['dispatcher', 'calendar'].includes(currentView)) {
-      currentView = 'dispatcher';
-    }
     tabsHTML = `
       <div class="nav-tab ${currentView === 'dispatcher' ? 'active' : ''}" data-view="dispatcher">
         🎧 Dispatch Desk
@@ -107,11 +105,20 @@ function renderNavigationTabs(role) {
         📅 Month Shift Schedule
       </div>
     `;
+  } else if (role === 'technician') {
+    tabsHTML = `
+      <div class="nav-tab ${currentView === 'technician' ? 'active' : ''}" data-view="technician">
+        🔧 My Work Orders & Jobs
+      </div>
+      <div class="nav-tab ${currentView === 'calendar' ? 'active' : ''}" data-view="calendar">
+        📅 My Shift Schedule
+      </div>
+    `;
   }
 
   tabsContainer.innerHTML = tabsHTML;
 
-  // Attach tab click listeners
+  // Attach desktop tab click listeners
   tabsContainer.querySelectorAll('.nav-tab').forEach(tab => {
     tab.addEventListener('click', (e) => {
       const view = e.currentTarget.getAttribute('data-view');
@@ -132,6 +139,49 @@ function renderNavigationTabs(role) {
       }
     };
   }
+}
+
+function renderMobileNav(role) {
+  const mobileNav = document.getElementById('mobile-nav-bar');
+  if (!mobileNav) return;
+
+  let items = [];
+  if (role === 'technician') {
+    items = [
+      { view: 'technician', icon: '🔧', label: 'My Jobs' },
+      { view: 'calendar', icon: '📅', label: 'Calendar' }
+    ];
+  } else if (role === 'dispatcher') {
+    items = [
+      { view: 'dispatcher', icon: '🎧', label: 'Dispatch' },
+      { view: 'calendar', icon: '📅', label: 'Calendar' }
+    ];
+  } else {
+    items = [
+      { view: 'dispatcher', icon: '🎧', label: 'Dispatch' },
+      { view: 'technician', icon: '🔧', label: 'Tech View' },
+      { view: 'calendar', icon: '📅', label: 'Calendar' },
+      { view: 'staff', icon: '👥', label: 'Staff' },
+      { view: 'analytics', icon: '📊', label: 'Analytics' }
+    ];
+  }
+
+  mobileNav.innerHTML = items.map(item => `
+    <button class="mobile-nav-item ${currentView === item.view ? 'active' : ''}" data-view="${item.view}">
+      <span class="mobile-nav-icon">${item.icon}</span>
+      <span>${item.label}</span>
+    </button>
+  `).join('');
+
+  mobileNav.querySelectorAll('.mobile-nav-item').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const view = e.currentTarget.getAttribute('data-view');
+      if (view) {
+        currentView = view;
+        renderApp();
+      }
+    });
+  });
 }
 
 function renderCurrentView() {

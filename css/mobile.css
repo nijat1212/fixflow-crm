@@ -42,6 +42,13 @@
   font-size: 1.25rem;
 }
 
+/* Desktop overrides: hide mobile bottom navigation bar */
+@media (min-width: 769px) {
+  .mobile-nav-bar {
+    display: none !important;
+  }
+}
+
 /* Mobile Breakpoints */
 @media (max-width: 768px) {
   body {
@@ -52,8 +59,12 @@
     padding: 1rem 0.75rem;
   }
 
+  #desktop-nav-bar {
+    display: none !important;
+  }
+
   .mobile-nav-bar {
-    display: flex;
+    display: flex !important;
   }
 
   .desktop-only {

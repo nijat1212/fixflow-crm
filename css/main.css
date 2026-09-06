@@ -261,3 +261,8 @@ select.form-control {
   color: var(--accent-blue);
   border-bottom-color: var(--accent-blue);
 }
+
+/* Utilities */
+.hidden {
+  display: none !important;
+}
