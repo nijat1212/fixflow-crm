@@ -32,6 +32,7 @@ export function formatDate(dateString) {
 
 export function getStatusBadgeHTML(status) {
   const statusConfig = {
+    // Title Case
     'Available': { label: 'Available', bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30', icon: '⚡' },
     'Assigned': { label: 'Assigned', bg: 'bg-blue-500/15', text: 'text-blue-400', border: 'border-blue-500/30', icon: '👤' },
     'Accepted': { label: 'Accepted', bg: 'bg-cyan-500/15', text: 'text-cyan-400', border: 'border-cyan-500/30', icon: '👍' },
@@ -39,7 +40,17 @@ export function getStatusBadgeHTML(status) {
     'On Site': { label: 'On Site', bg: 'bg-purple-500/15', text: 'text-purple-400', border: 'border-purple-500/30', icon: '🔧' },
     'Waiting for Parts': { label: 'Parts Pending', bg: 'bg-orange-500/15', text: 'text-orange-400', border: 'border-orange-500/30', icon: '📦' },
     'Completed': { label: 'Completed', bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30', icon: '✅' },
-    'Cancelled': { label: 'Cancelled', bg: 'bg-rose-500/15', text: 'text-rose-400', border: 'border-rose-500/30', icon: '❌' }
+    'Cancelled': { label: 'Cancelled', bg: 'bg-rose-500/15', text: 'text-rose-400', border: 'border-rose-500/30', icon: '❌' },
+
+    // Backend / snake_case
+    'draft_ticket': { label: 'Available', bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30', icon: '⚡' },
+    'scheduled': { label: 'Scheduled', bg: 'bg-blue-500/15', text: 'text-blue-400', border: 'border-blue-500/30', icon: '📅' },
+    'en_route': { label: 'In Route', bg: 'bg-indigo-500/15', text: 'text-indigo-400', border: 'border-indigo-500/30', icon: '🚚' },
+    'in_progress': { label: 'On Site', bg: 'bg-purple-500/15', text: 'text-purple-400', border: 'border-purple-500/30', icon: '🔧' },
+    'on_site': { label: 'On Site', bg: 'bg-purple-500/15', text: 'text-purple-400', border: 'border-purple-500/30', icon: '🔧' },
+    'parts_needed': { label: 'Parts Pending', bg: 'bg-orange-500/15', text: 'text-orange-400', border: 'border-orange-500/30', icon: '📦' },
+    'completed': { label: 'Completed', bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30', icon: '✅' },
+    'cancelled': { label: 'Cancelled', bg: 'bg-rose-500/15', text: 'text-rose-400', border: 'border-rose-500/30', icon: '❌' }
   };
 
   const config = statusConfig[status] || { label: status, bg: 'bg-slate-500/15', text: 'text-slate-400', border: 'border-slate-500/30', icon: '📌' };

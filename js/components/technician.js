@@ -9,11 +9,15 @@ export function renderTechnicianDashboard() {
   const activeTech = storage.getTechnicianById(activeTechId) || technicians[0];
   const allJobs = storage.getJobs();
 
-  // Tech specific jobs
+  // Status helpers
+  const isCompleted = (s) => (s || '').toLowerCase() === 'completed';
+  const isCancelled = (s) => (s || '').toLowerCase() === 'cancelled';
+
+  // Tech specific jobs: any assigned job that is not completed/cancelled is ACTIVE
   const myJobs = allJobs.filter(j => j.assignedTechId === activeTechId);
-  const myActiveJobs = myJobs.filter(j => ['Accepted', 'In Route', 'On Site', 'Waiting for Parts'].includes(j.status));
-  const myCompletedJobs = myJobs.filter(j => j.status === 'Completed');
-  const availablePool = allJobs.filter(j => j.status === 'Available');
+  const myActiveJobs = myJobs.filter(j => !isCompleted(j.status) && !isCancelled(j.status));
+  const myCompletedJobs = myJobs.filter(j => isCompleted(j.status));
+  const availablePool = allJobs.filter(j => (!j.assignedTechId || (j.status || '').toLowerCase() === 'draft_ticket' || (j.status || '').toLowerCase() === 'available') && !isCompleted(j.status) && !isCancelled(j.status));
 
   // Today's earnings
   const todayEarnings = myCompletedJobs.reduce((acc, j) => acc + (j.laborCost || 0) + (j.partsCost || 0), 0);
@@ -95,13 +99,14 @@ export function renderTechnicianDashboard() {
 }
 
 function renderTechJobCard(job) {
-  const isAccepted = job.status === 'Accepted';
-  const isInRoute = job.status === 'In Route';
-  const isOnSite = job.status === 'On Site';
-  const isParts = job.status === 'Waiting for Parts';
+  const norm = (job.status || '').toLowerCase().replace(/[\s_-]+/g, '');
+  const isScheduled = norm === 'scheduled' || norm === 'accepted' || norm === 'assigned';
+  const isInRoute = norm === 'inroute' || norm === 'enroute';
+  const isOnSite = norm === 'onsite' || norm === 'inprogress';
+  const isParts = norm === 'waitingforparts' || norm === 'partspending' || norm === 'partsneeded';
 
   return `
-    <div class="tech-job-card card space-y-3 relative border-l-4 ${isOnSite ? 'border-l-purple-500' : isInRoute ? 'border-l-indigo-500' : 'border-l-cyan-500'}">
+    <div class="tech-job-card card space-y-3 relative border-l-4 ${isOnSite ? 'border-l-purple-500' : isInRoute ? 'border-l-indigo-500' : isParts ? 'border-l-orange-500' : 'border-l-cyan-500'}">
       <!-- Top header -->
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
@@ -141,16 +146,16 @@ function renderTechJobCard(job) {
       <div>
         <p class="text-2xs font-bold uppercase text-muted mb-1 tracking-wider">Update Job Status:</p>
         <div class="grid grid-cols-5 gap-1 text-2xs text-center">
-          <button class="pipeline-step ${isAccepted ? 'active' : ''} btn-update-status" data-job-id="${job.id}" data-status="Accepted">
-            Accepted
+          <button class="pipeline-step ${isScheduled ? 'active' : ''} btn-update-status" data-job-id="${job.id}" data-status="scheduled">
+            Scheduled
           </button>
-          <button class="pipeline-step ${isInRoute ? 'active' : ''} btn-update-status" data-job-id="${job.id}" data-status="In Route">
+          <button class="pipeline-step ${isInRoute ? 'active' : ''} btn-update-status" data-job-id="${job.id}" data-status="en_route">
             In Route
           </button>
-          <button class="pipeline-step ${isOnSite ? 'active' : ''} btn-update-status" data-job-id="${job.id}" data-status="On Site">
+          <button class="pipeline-step ${isOnSite ? 'active' : ''} btn-update-status" data-job-id="${job.id}" data-status="in_progress">
             On Site
           </button>
-          <button class="pipeline-step ${isParts ? 'active' : ''} btn-update-status" data-job-id="${job.id}" data-status="Waiting for Parts">
+          <button class="pipeline-step ${isParts ? 'active' : ''} btn-update-status" data-job-id="${job.id}" data-status="parts_needed">
             Parts Pending
           </button>
           <button class="pipeline-step btn-open-completion-billing btn-emerald" data-job-id="${job.id}">

@@ -287,6 +287,10 @@ class StorageManager {
   }
 
   async updateJobStatus(jobId, newStatus, note = '', costs = {}) {
+    if (typeof note === 'object' && note !== null) {
+      costs = note;
+      note = costs.notes || costs.note || '';
+    }
     try {
       const updated = await api.jobs.updateStatus(jobId, newStatus, note, costs);
       const currentJobs = this.getJobs();
