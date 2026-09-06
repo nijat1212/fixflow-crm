@@ -229,6 +229,18 @@ function attachTechnicianEvents() {
       const jobId = e.currentTarget.getAttribute('data-job-id');
       const newStatus = e.currentTarget.getAttribute('data-status');
       storage.updateJobStatus(jobId, newStatus);
+
+      // Auto-update technician GPS location on status change
+      const activeTechId = storage.getActiveTechId();
+      if (activeTechId && typeof navigator !== 'undefined' && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            storage.updateTechnicianLocation(activeTechId, pos.coords.latitude, pos.coords.longitude);
+          },
+          (err) => console.warn('[GPS] Location notice:', err.message),
+          { timeout: 8000 }
+        );
+      }
     });
   });
 

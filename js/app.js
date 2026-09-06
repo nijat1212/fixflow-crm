@@ -31,6 +31,9 @@ function initApp() {
   });
 
   attachModalGlobalEvents();
+
+  // Background sync from FastAPI server (Google Cloud)
+  storage.syncFromServer();
 }
 
 function renderApp() {
@@ -178,7 +181,7 @@ function attachModalGlobalEvents() {
   // New Job Form Submit
   const newJobForm = document.getElementById('form-new-job');
   if (newJobForm) {
-    newJobForm.addEventListener('submit', (e) => {
+    newJobForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const formData = new FormData(newJobForm);
       const jobData = {
@@ -196,7 +199,7 @@ function attachModalGlobalEvents() {
         assignedTechId: formData.get('assignedTechId') || null
       };
 
-      storage.saveJob(jobData);
+      await storage.saveJob(jobData);
       document.getElementById('modal-new-job').classList.remove('open');
       newJobForm.reset();
       showToast('New Repair Ticket created!');

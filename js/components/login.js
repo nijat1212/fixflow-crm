@@ -44,7 +44,7 @@ export function renderLoginScreen() {
         </form>
 
         <p class="text-center text-xs text-muted mt-6">
-          Secured by <span class="text-blue-400 font-semibold">Firebase Authentication</span>
+          Powered by <span class="text-blue-400 font-semibold">FastAPI & Python Engine (Google Cloud)</span>
         </p>
       </div>
     </div>
