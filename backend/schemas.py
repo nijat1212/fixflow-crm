@@ -29,6 +29,16 @@ class UserResponse(UserBase):
     class Config:
         from_attributes = True
 
+class PasswordResetRequest(BaseModel):
+    new_password: Optional[str] = None
+
+class PasswordResetResponse(BaseModel):
+    status: str
+    user_id: str
+    name: str
+    email: str
+    new_password: str
+
 # ── Technician Schemas ─────────────────────────────────────────────────────────
 class TechnicianBase(BaseModel):
     name: str

@@ -37,7 +37,7 @@ export function renderStaffManagement() {
                 <th class="py-2.5 px-3">Email Address</th>
                 <th class="py-2.5 px-3">Role</th>
                 <th class="py-2.5 px-3">Tech ID / Details</th>
-                <th class="py-2.5 px-3 text-right">Password</th>
+                <th class="py-2.5 px-3 text-right">Actions & Security</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800 text-slate-300">
@@ -65,8 +65,10 @@ export function renderStaffManagement() {
                         ${tech ? `<span class="text-2xs text-muted block">Rating: ${tech.rating}★</span>` : ''}
                       ` : '<span class="text-slate-500">-</span>'}
                     </td>
-                    <td class="py-3 px-3 text-right font-mono text-slate-400">
-                      ••••••••
+                    <td class="py-3 px-3 text-right">
+                      <button class="btn btn-secondary btn-xs btn-reset-password text-amber-300 hover:text-amber-200 border-amber-500/30" data-user-id="${user.id}" data-user-name="${user.name}" data-user-email="${user.email}" data-user-role="${user.role}">
+                        🔑 Reset Password
+                      </button>
                     </td>
                   </tr>
                 `;
@@ -93,4 +95,54 @@ function attachStaffEvents() {
       if (modal) modal.classList.add('open');
     });
   }
+
+  // Reset Password Buttons
+  document.querySelectorAll('.btn-reset-password').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const userId = e.currentTarget.getAttribute('data-user-id');
+      const userName = e.currentTarget.getAttribute('data-user-name');
+      const userEmail = e.currentTarget.getAttribute('data-user-email');
+      const userRole = e.currentTarget.getAttribute('data-user-role');
+
+      if (!confirm(`Reset password for ${userName} (${userEmail})?`)) return;
+
+      const origText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '⏳ Resetting...';
+
+      const res = await storage.resetUserPassword(userId);
+
+      btn.disabled = false;
+      btn.innerHTML = origText;
+
+      if (res && res.success) {
+        // Show SMS credentials modal
+        const smsBox = document.getElementById('sms-credential-box');
+        const loginUrl = window.location.origin || 'http://localhost:5173';
+        const smsText = `Hi ${userName},\nYour FixFlow CRM credentials have been reset:\n\nURL: ${loginUrl}\nRole: ${(userRole || '').toUpperCase()}\nEmail: ${userEmail}\nNew Password: ${res.new_password}\n\nPlease save this message.`;
+
+        if (smsBox) smsBox.innerText = smsText;
+
+        const modal = document.getElementById('modal-staff-created');
+        if (modal) {
+          const headerTitle = modal.querySelector('h3');
+          if (headerTitle) headerTitle.innerHTML = '🔑 Password Reset Successfully!';
+          modal.classList.add('open');
+        }
+
+        const smsBtn = document.getElementById('btn-copy-sms');
+        if (smsBtn) {
+          smsBtn.onclick = () => {
+            navigator.clipboard.writeText(smsText);
+            smsBtn.innerHTML = '<span>✅ Copied to Clipboard!</span>';
+            setTimeout(() => {
+              smsBtn.innerHTML = '<span>📋 Copy Credentials for SMS</span>';
+            }, 3000);
+          };
+        }
+      } else {
+        alert('Failed to reset password: ' + (res && res.error ? res.error : 'Unknown error'));
+      }
+    });
+  });
 }

@@ -208,6 +208,16 @@ class StorageManager {
     }
   }
 
+  async resetUserPassword(userId, newPassword = null) {
+    try {
+      const res = await api.staff.resetPassword(userId, newPassword);
+      return { success: true, ...res };
+    } catch (err) {
+      console.error('[FixFlow] Reset password error:', err);
+      return { success: false, error: err.message };
+    }
+  }
+
   // ── Technicians ─────────────────────────────────────────────────────────────
   getTechnicians() {
     try {

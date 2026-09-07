@@ -299,6 +299,14 @@ export const api = {
         body: JSON.stringify(payload)
       });
       return normalizeUser(res);
+    },
+
+    async resetPassword(userId, newPassword = null) {
+      const payload = newPassword ? { new_password: newPassword } : {};
+      return await request(`/staff/${userId}/reset-password`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
     }
   },
 
