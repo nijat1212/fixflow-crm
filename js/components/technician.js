@@ -195,13 +195,17 @@ function renderClaimableJobCard(job) {
 function renderTechCompletedCard(job) {
   const total = (job.laborCost || 0) + (job.partsCost || 0);
   return `
-    <div class="card border-l-4 border-l-emerald-500 opacity-90">
+    <div class="card border-l-4 border-l-emerald-500 opacity-95 cursor-pointer hover:border-l-emerald-400 hover:bg-slate-900/80 transition" onclick="window.openJobDetails('${job.id}')">
       <div class="flex items-center justify-between text-xs mb-1">
         <span class="font-mono font-bold text-emerald-400">${job.id}</span>
         <span class="text-emerald-400 font-bold">${formatCurrency(total)}</span>
       </div>
       <h4 class="font-bold text-white text-xs">${job.brand} ${job.applianceType} - ${job.customerName}</h4>
       <p class="text-2xs text-muted mt-1">Labor: ${formatCurrency(job.laborCost)} | Parts: ${formatCurrency(job.partsCost)}</p>
+      <div class="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between text-2xs">
+        <span class="text-slate-400">✅ Paid & Invoiced</span>
+        <span class="text-blue-400 font-semibold hover:underline">📄 View Full Invoice & Receipt →</span>
+      </div>
     </div>
   `;
 }

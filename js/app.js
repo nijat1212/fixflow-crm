@@ -427,7 +427,7 @@ window.openJobDetailModal = function(jobId) {
         </div>
       </div>
 
-      ${job.status === 'Completed' ? `
+      ${['completed', 'Completed'].includes(job.status) ? `
         <div class="border-t border-slate-800 pt-2 bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20">
           <span class="text-emerald-400 block text-2xs uppercase font-bold">Completed Billing</span>
           <div class="flex justify-between text-slate-200 mt-1">
