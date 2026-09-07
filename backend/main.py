@@ -36,6 +36,16 @@ def on_startup():
     # Automatically seed initial users & jobs if database is fresh
     seed()
 
+@app.get("/")
+def root():
+    return {
+        "status": "online",
+        "service": "FixFlow CRM Backend Engine",
+        "version": "2.0.0",
+        "docs_url": "/docs",
+        "health_check": "/api/health"
+    }
+
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "service": "FixFlow CRM Backend", "version": "2.0.0"}
