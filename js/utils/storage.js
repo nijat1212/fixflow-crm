@@ -159,8 +159,8 @@ class StorageManager {
     } catch (err) {
       console.error('[FixFlow] Login failed:', err);
       let msg = err.message || 'Invalid email or password.';
-      if (msg.includes('Failed to fetch')) {
-        msg = 'Cannot reach API server at 34.159.240.49:8000. Check internet connection.';
+      if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+        msg = 'Cannot reach API server. Please verify your connection or try again in a moment.';
       }
       return { success: false, error: msg };
     }
