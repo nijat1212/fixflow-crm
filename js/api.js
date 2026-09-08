@@ -1,8 +1,8 @@
 // FixFlow CRM — REST API Client (FastAPI Backend on Google Cloud)
 // Direct HTTP fetch client with JWT Bearer authentication and snake_case <-> camelCase mapping
 
-// Direct trusted HTTPS endpoint (Let's Encrypt SSL certificate configured on server)
-const DEFAULT_API_BASE = 'https://34.63.55.225.sslip.io/api';
+// When frontend and backend are hosted on the same Google Cloud server, relative '/api' works seamlessly
+const DEFAULT_API_BASE = '/api';
 
 export const API_BASE = window.FIXFLOW_API_URL || 
   localStorage.getItem('fixflow_api_url') || 
