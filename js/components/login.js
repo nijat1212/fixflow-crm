@@ -84,17 +84,23 @@ async function attemptLogin(email, pass) {
   if (btnText) btnText.textContent = 'Signing in...';
   if (spinner) spinner.classList.remove('hidden');
 
-  const res = await storage.login(email, pass);
-
-  // Restore button state
-  if (submitBtn) submitBtn.disabled = false;
-  if (btnText) btnText.textContent = 'Sign In to FixFlow';
-  if (spinner) spinner.classList.add('hidden');
-
-  if (!res.success) {
+  try {
+    const res = await storage.login(email, pass);
+    if (!res.success) {
+      if (alertEl && alertText) {
+        alertText.textContent = res.error;
+        alertEl.classList.remove('hidden');
+      }
+    }
+  } catch (err) {
     if (alertEl && alertText) {
-      alertText.textContent = res.error;
+      alertText.textContent = err.message || 'Login failed';
       alertEl.classList.remove('hidden');
     }
+  } finally {
+    // Restore button state
+    if (submitBtn) submitBtn.disabled = false;
+    if (btnText) btnText.textContent = 'Sign In to FixFlow';
+    if (spinner) spinner.classList.add('hidden');
   }
 }

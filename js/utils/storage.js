@@ -151,10 +151,14 @@ class StorageManager {
       this._sessionCache = res.user;
       localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(res.user));
 
-      // Synchronize data immediately from FastAPI server
-      await this.syncFromServer();
-
+      // 1. Immediately switch the view/dashboard so the UI doesn't hang
       this.notify('session_changed', res.user);
+
+      // 2. Synchronize data from FastAPI server in the background (non-blocking)
+      this.syncFromServer().catch(err => {
+        console.warn('[FixFlow] Background sync notice:', err);
+      });
+
       return { success: true, user: res.user };
     } catch (err) {
       console.error('[FixFlow] Login failed:', err);
