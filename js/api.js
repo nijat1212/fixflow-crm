@@ -1,10 +1,8 @@
 // FixFlow CRM — REST API Client (FastAPI Backend on Google Cloud)
 // Direct HTTP fetch client with JWT Bearer authentication and snake_case <-> camelCase mapping
 
-// On HTTPS (e.g. Netlify), use relative '/api' so Netlify proxy rewrites it to the VM without Mixed Content errors.
-// On HTTP (e.g. localhost), default directly to the VM or relative /api if proxied.
-const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-const DEFAULT_API_BASE = isHttps ? '/api' : 'http://34.63.55.225:8000/api';
+// Direct trusted HTTPS endpoint (Let's Encrypt SSL certificate configured on server)
+const DEFAULT_API_BASE = 'https://34.63.55.225.sslip.io/api';
 
 export const API_BASE = window.FIXFLOW_API_URL || 
   localStorage.getItem('fixflow_api_url') || 
