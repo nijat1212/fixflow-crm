@@ -130,6 +130,9 @@ def update_job_status(
     if data.diagnostic_fee is not None:
         job.diagnostic_fee = data.diagnostic_fee
 
+    if data.parts_used is not None:
+        job.parts_used = data.parts_used
+
     if data.total_amount is not None:
         job.total_amount = data.total_amount
     else:

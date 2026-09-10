@@ -71,6 +71,7 @@ class Job(Base):
     # Billing & Financials
     labor_cost = Column(Float, default=0.0)
     parts_cost = Column(Float, default=0.0)
+    parts_used = Column(JSON, default=list)  # List of part names/descriptions
     diagnostic_fee = Column(Float, default=85.0)
     total_amount = Column(Float, default=0.0)
     payment_status = Column(String, default="unpaid")  # unpaid, paid_card, paid_cash, invoice_sent

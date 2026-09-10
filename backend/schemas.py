@@ -123,6 +123,7 @@ class JobResponse(BaseModel):
     assigned_tech_id: Optional[str] = None
     labor_cost: float = 0.0
     parts_cost: float = 0.0
+    parts_used: Optional[List[str]] = []
     diagnostic_fee: float = 85.0
     total_amount: float = 0.0
     payment_status: str = "unpaid"
