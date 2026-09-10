@@ -148,8 +148,11 @@ function renderAvailableJobCard(job, technicians) {
         <p class="text-xs text-slate-300 mb-2 line-clamp-2">${job.issueDescription}</p>
 
         <div class="text-2xs text-muted space-y-1 mb-3 bg-slate-950/50 p-2.5 rounded-lg border border-slate-800">
-          <div class="flex items-center gap-1">
-            <span>👤</span> <strong class="text-slate-200">${job.customerName}</strong>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1">
+              <span>👤</span> <strong class="text-slate-200">${job.customerName}</strong>
+            </div>
+            ${job.phone ? `<a href="tel:${job.phone}" class="text-blue-400 hover:underline flex items-center gap-0.5 font-semibold">📞 ${formatPhone(job.phone)}</a>` : ''}
           </div>
           <div class="flex items-center gap-1">
             <span>📍</span> <span>${job.address}, ${job.zipCode}</span>
@@ -180,7 +183,7 @@ function renderJobTableRow(job, technicians) {
       <td class="py-3 px-3 font-mono font-bold text-blue-400">${job.id}</td>
       <td class="py-3 px-3">
         <div class="font-semibold text-white">${job.customerName}</div>
-        <div class="text-muted text-2xs">${formatPhone(job.phone)}</div>
+        <div class="text-muted text-2xs">${job.phone ? `<a href="tel:${job.phone}" class="text-blue-400 hover:underline">📞 ${formatPhone(job.phone)}</a>` : ''}</div>
       </td>
       <td class="py-3 px-3">
         <div>${job.city}, TX</div>

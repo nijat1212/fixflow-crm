@@ -134,8 +134,8 @@ function renderNavigationTabs(role) {
   if (resetBtn) {
     resetBtn.onclick = () => {
       if (confirm('Reset all jobs, accounts, and shift data back to default demo state?')) {
-        storage.resetData();
-        showToast('Demo data reset successfully!');
+        localStorage.clear();
+        window.location.reload();
       }
     };
   }
@@ -439,6 +439,14 @@ window.openJobDetailModal = function(jobId) {
           </div>
         </div>
       ` : ''}
+
+      <!-- Print Invoice / Save PDF Button -->
+      <div class="border-t border-slate-800 pt-3 flex items-center justify-end">
+        <button type="button" class="btn btn-outline text-xs text-blue-300 border-blue-500/40 hover:bg-blue-500/10 flex items-center gap-1.5 py-1.5 px-3 rounded-lg cursor-pointer" onclick="window.print()">
+          <span>🖨️</span>
+          <span>Print Invoice / Save PDF</span>
+        </button>
+      </div>
     </div>
   `;
 

@@ -181,6 +181,10 @@ function renderClaimableJobCard(job) {
       </div>
 
       <div class="text-xs text-muted bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 space-y-1">
+        <div class="flex items-center justify-between">
+          <span>👤 <strong class="text-slate-200">${job.customerName || 'Customer'}</strong></span>
+          ${job.phone ? `<a href="tel:${job.phone}" class="text-blue-400 font-semibold hover:underline flex items-center gap-1 text-2xs">📞 ${formatPhone(job.phone)}</a>` : ''}
+        </div>
         <div>📍 <strong>${job.city}, TX ${job.zipCode}</strong> (${job.address})</div>
         <div>📅 ${formatDate(job.scheduledDate)} - ${job.scheduledTimeWindow}</div>
       </div>
@@ -204,7 +208,9 @@ function renderTechCompletedCard(job) {
       <p class="text-2xs text-muted mt-1">Labor: ${formatCurrency(job.laborCost)} | Parts: ${formatCurrency(job.partsCost)}</p>
       <div class="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between text-2xs">
         <span class="text-slate-400">✅ Paid & Invoiced</span>
-        <span class="text-blue-400 font-semibold hover:underline">📄 View Full Invoice & Receipt →</span>
+        <button type="button" class="btn-view-job-details text-blue-400 font-semibold hover:underline bg-transparent border-0 p-0 cursor-pointer text-2xs flex items-center gap-1" data-job-id="${job.id}">
+          📄 View Full Invoice & Receipt →
+        </button>
       </div>
     </div>
   `;
@@ -259,6 +265,17 @@ function attachTechnicianEvents() {
       const jobId = e.currentTarget.getAttribute('data-job-id');
       if (window.openBillingModal) {
         window.openBillingModal(jobId);
+      }
+    });
+  });
+
+  // View Job Details Modal
+  document.querySelectorAll('.btn-view-job-details').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const jobId = e.currentTarget.getAttribute('data-job-id');
+      if (window.openJobDetailModal) {
+        window.openJobDetailModal(jobId);
       }
     });
   });
