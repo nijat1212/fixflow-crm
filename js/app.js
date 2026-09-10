@@ -129,16 +129,6 @@ function renderNavigationTabs(role) {
     });
   });
 
-  // Reset Data Button listener
-  const resetBtn = document.getElementById('btn-reset-data');
-  if (resetBtn) {
-    resetBtn.onclick = () => {
-      if (confirm('Reset all jobs, accounts, and shift data back to default demo state?')) {
-        localStorage.clear();
-        window.location.reload();
-      }
-    };
-  }
 }
 
 function renderMobileNav(role) {
