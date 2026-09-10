@@ -39,7 +39,7 @@ const APPLIANCE_ABBR = {
 // Start and End hours for the matrix grid
 const START_HOUR = 6;  // 6am
 const END_HOUR = 19;   // 7pm
-const SLOT_HEIGHT = 54; // px per hour slot
+const SLOT_HEIGHT = 50; // px per hour slot
 
 export function renderCalendar() {
   const container = document.getElementById('view-container');
@@ -259,15 +259,17 @@ function renderTimelineMatrix({ weekDays, technicians, shifts, jobs, effectiveTe
       return `
         <div class="timeline-job-block"
              data-job-id="${job.id}"
-             style="top: ${topPx}px; height: ${heightPx}px; left: 4px; right: 4px; ${bgStyle}"
+             style="top: ${topPx}px; height: ${heightPx}px; left: 1px; right: 1px; ${bgStyle}"
              title="${job.customerName} - ${job.applianceType} (${job.scheduledTimeWindow})">
           
-          <div class="flex items-center justify-between text-2xs font-extrabold truncate">
-            <span>${shortCust} | ${shortAppliance}</span>
+          <div class="font-extrabold text-2xs leading-tight truncate">
+            ${shortCust}
           </div>
-
-          <div class="text-3xs opacity-85 truncate mt-auto">
-            ${job.scheduledTimeWindow || ''}
+          <div class="text-3xs opacity-90 truncate leading-tight">
+            ${shortAppliance}
+          </div>
+          <div class="text-3xs opacity-75 truncate mt-auto font-mono">
+            ${job.scheduledTimeWindow ? job.scheduledTimeWindow.split(' ')[0] : ''}
           </div>
         </div>
       `;

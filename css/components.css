@@ -256,19 +256,20 @@
   flex-direction: column;
   background: #090d16;
   border: 1px solid #1e293b;
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  width: 100%;
 }
 
 .timeline-days-strip {
   display: grid;
-  grid-template-columns: 52px repeat(7, minmax(105px, 1fr));
-  gap: 6px;
+  grid-template-columns: 38px repeat(7, 1fr);
+  gap: 2px;
   background: #0f172a;
-  padding: 8px 6px;
+  padding: 6px 4px;
   border-bottom: 1px solid #1e293b;
-  overflow-x: auto;
+  width: 100%;
 }
 
 .timeline-day-bubble {
@@ -277,9 +278,10 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  padding: 4px 0;
-  border-radius: 10px;
+  padding: 2px 0;
+  border-radius: 8px;
   transition: background 0.15s ease;
+  user-select: none;
 }
 
 .timeline-day-bubble:hover {
@@ -287,20 +289,20 @@
 }
 
 .timeline-day-num {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 800;
   color: #e2e8f0;
-  margin-bottom: 2px;
+  margin-bottom: 1px;
 }
 
 .timeline-day-name {
-  font-size: 0.7rem;
+  font-size: 0.62rem;
   font-weight: 700;
   color: #64748b;
   text-transform: capitalize;
@@ -309,7 +311,7 @@
 .timeline-day-bubble.selected .timeline-day-num {
   background: #2563eb;
   color: #ffffff;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.5);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.5);
 }
 
 .timeline-day-bubble.selected .timeline-day-name {
@@ -318,18 +320,19 @@
 }
 
 .timeline-day-bubble.today:not(.selected) .timeline-day-num {
-  border: 2px solid #3b82f6;
+  border: 1.5px solid #3b82f6;
   color: #3b82f6;
 }
 
 .timeline-body-wrap {
   display: flex;
-  overflow-x: auto;
+  overflow-x: hidden;
   max-height: 75vh;
+  width: 100%;
 }
 
 .timeline-hours-axis {
-  width: 52px;
+  width: 38px;
   flex-shrink: 0;
   border-right: 1px solid #1e293b;
   background: #090d16;
@@ -338,14 +341,14 @@
 }
 
 .timeline-hour-label {
-  height: 54px;
-  font-size: 0.7rem;
+  height: 50px;
+  font-size: 0.65rem;
   font-weight: 700;
   color: #64748b;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 4px;
+  padding-top: 2px;
 }
 
 .timeline-hour-label.current-hour {
@@ -356,23 +359,25 @@
 .timeline-days-grid {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(7, minmax(105px, 1fr));
-  gap: 6px;
-  padding: 6px;
-  min-width: 735px;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  padding: 3px;
+  width: calc(100% - 38px);
+  min-width: 0;
 }
 
 .timeline-day-col {
   position: relative;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .timeline-slot-cell {
-  height: 50px;
-  margin-bottom: 4px;
+  height: 48px;
+  margin-bottom: 2px;
   background: rgba(30, 41, 59, 0.45);
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid rgba(51, 65, 85, 0.25);
   transition: background 0.15s ease;
 }
@@ -384,10 +389,10 @@
 
 .timeline-job-block {
   position: absolute;
-  border-radius: 8px;
-  padding: 6px 8px;
+  border-radius: 6px;
+  padding: 3px 3px;
   color: #ffffff;
-  font-size: 0.75rem;
+  font-size: 0.6rem;
   font-weight: 700;
   cursor: pointer;
   z-index: 10;
@@ -395,15 +400,16 @@
   flex-direction: column;
   justify-content: space-between;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  line-height: 1.15;
 }
 
 .timeline-job-block:hover {
   transform: scale(1.02);
   z-index: 20;
   filter: brightness(1.15);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
 }
 
 .calendar-job-card.status-accepted { border-left-color: #06b6d4; }
