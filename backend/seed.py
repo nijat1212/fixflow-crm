@@ -45,8 +45,12 @@ def seed():
     db.add_all([tech1, tech2])
     db.flush()
 
-    # 2. Users
+    # 2. Users (supports @24fix.us production domain and legacy @fixflow.com)
     users = [
+        models.User(name="Business Owner", email="owner@24fix.us", hashed_password=get_password_hash("owner123"), role="owner", tech_id=None),
+        models.User(name="Sarah (Dispatch)", email="dispatch@24fix.us", hashed_password=get_password_hash("dispatch123"), role="dispatcher", tech_id=None),
+        models.User(name="Mike Miller", email="mike@24fix.us", hashed_password=get_password_hash("mike123"), role="technician", tech_id="tech_1"),
+        models.User(name="Marcus Vance", email="marcus@24fix.us", hashed_password=get_password_hash("marcus123"), role="technician", tech_id="tech_2"),
         models.User(name="Business Owner", email="owner@fixflow.com", hashed_password=get_password_hash("owner123"), role="owner", tech_id=None),
         models.User(name="Sarah (Dispatch)", email="dispatch@fixflow.com", hashed_password=get_password_hash("dispatch123"), role="dispatcher", tech_id=None),
         models.User(name="Mike Miller", email="mike@fixflow.com", hashed_password=get_password_hash("mike123"), role="technician", tech_id="tech_1"),

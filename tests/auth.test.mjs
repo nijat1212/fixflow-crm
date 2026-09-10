@@ -50,10 +50,10 @@ async function runTests() {
   console.log('🧪 Starting FixFlow CI Automated Tests...\n');
 
   const users = [
-    { email: 'owner@fixflow.com', pass: process.env.TEST_OWNER_PASSWORD },
-    { email: 'dispatch@fixflow.com', pass: process.env.TEST_DISPATCH_PASSWORD },
-    { email: 'mike@fixflow.com', pass: process.env.TEST_TECH1_PASSWORD },
-    { email: 'marcus@fixflow.com', pass: process.env.TEST_TECH2_PASSWORD }
+    { email: 'owner@24fix.us', pass: process.env.TEST_OWNER_PASSWORD },
+    { email: 'dispatch@24fix.us', pass: process.env.TEST_DISPATCH_PASSWORD },
+    { email: 'mike@24fix.us', pass: process.env.TEST_TECH1_PASSWORD },
+    { email: 'marcus@24fix.us', pass: process.env.TEST_TECH2_PASSWORD }
   ].filter(u => Boolean(u.pass));
 
   if (users.length === 0) {
@@ -67,7 +67,7 @@ async function runTests() {
     try {
       const res = await signInWithEmailAndPassword(auth, u.email, u.pass);
       if (res.user && res.user.uid) {
-        console.log(`✅ [PASS] Auth for ${u.email}`);
+        console.log(`✅ [PASS] Auth for ${u.email} (UID: ${res.user.uid})`);
         passed++;
       }
     } catch (err) {
@@ -78,7 +78,7 @@ async function runTests() {
 
   // Security test: invalid password must be rejected
   try {
-    await signInWithEmailAndPassword(auth, 'owner@fixflow.com', 'wrong_pass_security_check');
+    await signInWithEmailAndPassword(auth, 'owner@24fix.us', 'wrong_pass_security_check');
     console.error('❌ [FAIL] Security test: Invalid credentials was unexpectedly accepted!');
     process.exit(1);
   } catch (err) {
