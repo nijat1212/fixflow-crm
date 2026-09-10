@@ -248,7 +248,162 @@
   background: #273549;
   border-color: #3b82f6;
   transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+/* Timeline Matrix Grid (Housecall / ServiceTitan Style) */
+.timeline-matrix-container {
+  display: flex;
+  flex-direction: column;
+  background: #090d16;
+  border: 1px solid #1e293b;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.timeline-days-strip {
+  display: grid;
+  grid-template-columns: 52px repeat(7, minmax(105px, 1fr));
+  gap: 6px;
+  background: #0f172a;
+  padding: 8px 6px;
+  border-bottom: 1px solid #1e293b;
+  overflow-x: auto;
+}
+
+.timeline-day-bubble {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 4px 0;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+}
+
+.timeline-day-bubble:hover {
+  background: rgba(30, 41, 59, 0.6);
+}
+
+.timeline-day-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #e2e8f0;
+  margin-bottom: 2px;
+}
+
+.timeline-day-name {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: capitalize;
+}
+
+.timeline-day-bubble.selected .timeline-day-num {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.5);
+}
+
+.timeline-day-bubble.selected .timeline-day-name {
+  color: #3b82f6;
+  font-weight: 800;
+}
+
+.timeline-day-bubble.today:not(.selected) .timeline-day-num {
+  border: 2px solid #3b82f6;
+  color: #3b82f6;
+}
+
+.timeline-body-wrap {
+  display: flex;
+  overflow-x: auto;
+  max-height: 75vh;
+}
+
+.timeline-hours-axis {
+  width: 52px;
+  flex-shrink: 0;
+  border-right: 1px solid #1e293b;
+  background: #090d16;
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline-hour-label {
+  height: 54px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 4px;
+}
+
+.timeline-hour-label.current-hour {
+  color: #3b82f6;
+  font-weight: 800;
+}
+
+.timeline-days-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(105px, 1fr));
+  gap: 6px;
+  padding: 6px;
+  min-width: 735px;
+}
+
+.timeline-day-col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline-slot-cell {
+  height: 50px;
+  margin-bottom: 4px;
+  background: rgba(30, 41, 59, 0.45);
+  border-radius: 8px;
+  border: 1px solid rgba(51, 65, 85, 0.25);
+  transition: background 0.15s ease;
+}
+
+.timeline-slot-cell:hover {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.timeline-job-block {
+  position: absolute;
+  border-radius: 8px;
+  padding: 6px 8px;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.timeline-job-block:hover {
+  transform: scale(1.02);
+  z-index: 20;
+  filter: brightness(1.15);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
 }
 
 .calendar-job-card.status-accepted { border-left-color: #06b6d4; }
