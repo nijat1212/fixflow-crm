@@ -7,9 +7,13 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node tests/auth.test.mjs && node tests/jobs.test.mjs",
+    "test": "node tests/all_tests.mjs",
     "test:auth": "node tests/auth.test.mjs",
-    "test:jobs": "node tests/jobs.test.mjs"
+    "test:jobs": "node tests/jobs.test.mjs",
+    "test:staff": "node tests/staff.test.mjs",
+    "test:billing": "node tests/billing.test.mjs",
+    "test:shifts": "node tests/shifts.test.mjs",
+    "test:geo": "node tests/tech_geo.test.mjs"
   },
   "devDependencies": {
     "vite": "^5.2.0"

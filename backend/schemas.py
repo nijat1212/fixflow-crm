@@ -30,6 +30,8 @@ class UserResponse(UserBase):
         from_attributes = True
 
 class PasswordResetRequest(BaseModel):
+    user_id: Optional[str] = None
+    email: Optional[str] = None
     new_password: Optional[str] = None
 
 class PasswordResetResponse(BaseModel):
@@ -95,6 +97,9 @@ class JobStatusUpdate(BaseModel):
     labor_cost: Optional[float] = None
     parts_cost: Optional[float] = None
     diagnostic_fee: Optional[float] = None
+    parts_used: Optional[List[str]] = None
+    tax: Optional[float] = None
+    total_amount: Optional[float] = None
 
 class JobAssignRequest(BaseModel):
     tech_id: str
@@ -135,6 +140,11 @@ class ShiftCreate(BaseModel):
     start_time: str = "08:00"
     end_time: str = "17:00"
     status: str = "confirmed"
+
+class ShiftUpdate(BaseModel):
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    status: Optional[str] = None
 
 class ShiftResponse(BaseModel):
     id: str

@@ -84,3 +84,35 @@ def reset_staff_password(
         "email": user.email,
         "new_password": new_password
     }
+
+@router.post("/reset-password", response_model=schemas.PasswordResetResponse)
+def reset_staff_password_body(
+    data: schemas.PasswordResetRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(require_owner)
+):
+    query = db.query(models.User)
+    if data.user_id:
+        user = query.filter(models.User.id == data.user_id).first()
+    elif data.email:
+        user = query.filter(models.User.email == data.email.strip().lower()).first()
+    else:
+        raise HTTPException(status_code=400, detail="user_id or email must be provided")
+
+    if not user:
+        raise HTTPException(status_code=404, detail="Employee not found")
+
+    new_password = data.new_password
+    if not new_password:
+        new_password = f"Fix{secrets.choice(string.ascii_uppercase)}{secrets.randbelow(9000) + 1000}!"
+
+    user.hashed_password = get_password_hash(new_password)
+    db.commit()
+
+    return {
+        "status": "success",
+        "user_id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "new_password": new_password
+    }

@@ -43,3 +43,24 @@ def delete_shift(
     db.delete(shift)
     db.commit()
     return {"status": "deleted", "id": shift_id}
+
+@router.put("/{shift_id}", response_model=schemas.ShiftResponse)
+@router.patch("/{shift_id}", response_model=schemas.ShiftResponse)
+def update_shift(
+    shift_id: str,
+    data: schemas.ShiftUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(require_dispatcher_or_owner)
+):
+    shift = db.query(models.Shift).filter(models.Shift.id == shift_id).first()
+    if not shift:
+        raise HTTPException(status_code=404, detail="Shift not found")
+    if data.status is not None:
+        shift.status = data.status
+    if data.start_time is not None:
+        shift.start_time = data.start_time
+    if data.end_time is not None:
+        shift.end_time = data.end_time
+    db.commit()
+    db.refresh(shift)
+    return shift

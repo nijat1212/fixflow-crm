@@ -130,12 +130,22 @@ def update_job_status(
     if data.diagnostic_fee is not None:
         job.diagnostic_fee = data.diagnostic_fee
 
-    job.total_amount = job.diagnostic_fee + job.labor_cost + job.parts_cost
+    if data.total_amount is not None:
+        job.total_amount = data.total_amount
+    else:
+        job.total_amount = job.diagnostic_fee + job.labor_cost + job.parts_cost
+
+    note_parts = []
+    if data.parts_used:
+        note_parts.append(f"Parts Used: {', '.join(data.parts_used)}")
+    if data.note:
+        note_parts.append(data.note)
+    final_note = " — ".join(note_parts) if note_parts else f"Status changed to {data.status}"
 
     timeline_entry = models.JobTimeline(
         job_id=job.id,
         status=data.status,
-        note=data.note or f"Status changed to {data.status}"
+        note=final_note
     )
     db.add(timeline_entry)
     db.commit()
