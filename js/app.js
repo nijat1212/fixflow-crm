@@ -444,6 +444,7 @@ window.openJobDetailModal = function(jobId) {
 
   document.getElementById('modal-job-details').classList.add('open');
 };
+window.openJobDetails = window.openJobDetailModal;
 
 window.openBillingModal = function(jobId) {
   const job = storage.getJobById(jobId);

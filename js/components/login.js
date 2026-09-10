@@ -29,7 +29,7 @@ export function renderLoginScreen() {
         <form id="form-login" class="space-y-4">
           <div class="form-group mb-0">
             <label class="form-label">Email Address</label>
-            <input type="email" id="login-email" class="form-control" placeholder="name@fixflow.com" required autocomplete="email">
+            <input type="email" id="login-email" class="form-control" placeholder="owner@24fix.us" required autocomplete="email">
           </div>
 
           <div class="form-group mb-0">

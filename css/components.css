@@ -129,6 +129,137 @@
 }
 
 /* Calendar Component */
+/* Calendar Component */
+.calendar-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.calendar-nav-btn {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #f1f5f9;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.15s ease;
+}
+
+.calendar-nav-btn:hover {
+  background: #334155;
+  border-color: #475569;
+  color: #ffffff;
+}
+
+.calendar-view-btn {
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: #94a3b8;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.calendar-view-btn:first-child {
+  border-radius: 8px 0 0 8px;
+}
+
+.calendar-view-btn:last-child {
+  border-radius: 0 8px 8px 0;
+  border-left: none;
+}
+
+.calendar-view-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+/* Week Grid */
+.calendar-week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(240px, 1fr));
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 0.75rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.calendar-week-col {
+  background-color: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  min-height: 480px;
+  scroll-snap-align: start;
+  transition: all 0.2s ease;
+}
+
+.calendar-week-col.today {
+  border-color: rgba(59, 130, 246, 0.5);
+  background: linear-gradient(180deg, rgba(30, 58, 138, 0.15) 0%, rgba(15, 23, 42, 1) 120px);
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.1);
+}
+
+.calendar-col-header {
+  padding: 0.75rem;
+  border-bottom: 1px solid #1e293b;
+  background: rgba(15, 23, 42, 0.75);
+  border-radius: 12px 12px 0 0;
+}
+
+.calendar-col-header.today {
+  background: rgba(37, 99, 235, 0.15);
+  border-bottom-color: rgba(59, 130, 246, 0.3);
+}
+
+.calendar-col-body {
+  padding: 0.65rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+/* Job Cards inside Calendar */
+.calendar-job-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.65rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-left: 3px solid #64748b;
+}
+
+.calendar-job-card:hover {
+  background: #273549;
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.calendar-job-card.status-accepted { border-left-color: #06b6d4; }
+.calendar-job-card.status-en_route { border-left-color: #6366f1; }
+.calendar-job-card.status-in_route { border-left-color: #6366f1; }
+.calendar-job-card.status-on_site { border-left-color: #a855f7; }
+.calendar-job-card.status-parts_needed { border-left-color: #f97316; }
+.calendar-job-card.status-completed { border-left-color: #10b981; }
+.calendar-job-card.status-scheduled { border-left-color: #3b82f6; }
+
+/* Month Grid */
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
