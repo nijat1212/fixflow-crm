@@ -3,20 +3,13 @@
 
 import { storage } from '../utils/storage.js';
 
-// Calendar View State
+// Calendar View State - Defaults dynamically to real-time current date
 const calendarState = {
-  currentDate: new Date(2026, 8, 10), // September 10, 2026 (or new Date())
-  selectedDayIndex: 4, // 0 = Sun, 1 = Mon ... default to Thursday (Sep 10)
+  currentDate: new Date(),
+  selectedDayIndex: new Date().getDay(), // 0 = Sun, 1 = Mon ...
   viewMode: 'timeline', // 'timeline' | 'cards' | 'month'
   selectedTechId: 'all' // 'all' or techId
 };
-
-// Initialize to real current date if 2026 or later
-const realNow = new Date();
-if (realNow.getFullYear() >= 2026) {
-  calendarState.currentDate = new Date(realNow);
-  calendarState.selectedDayIndex = realNow.getDay();
-}
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -118,17 +111,23 @@ function renderCalendarControls({ isTechnician, currentTech, technicians, effect
     <div class="card p-3 bg-slate-900/90 border-slate-800 flex items-center justify-between flex-wrap gap-3">
       <!-- Left: Now Button & Month Dropdown -->
       <div class="flex items-center gap-3">
-        <button id="btn-cal-now" class="calendar-nav-btn font-bold text-xs py-1.5 px-3 flex items-center gap-1.5 bg-blue-600/20 border-blue-500/40 text-blue-400 hover:bg-blue-600/30">
+        <button id="btn-cal-now" class="calendar-nav-btn font-bold text-xs py-1.5 px-3 flex items-center gap-1.5 bg-blue-600/20 border-blue-500/40 text-blue-400 hover:bg-blue-600/30 transition-all cursor-pointer shadow-sm" title="Jump to Today & Current Time">
           <span>⚡</span>
-          <span>Now</span>
+          <span>Today / Now</span>
         </button>
 
         <div class="flex items-center gap-1">
-          <button id="btn-cal-prev-week" class="calendar-nav-btn py-1 px-2 text-xs">◀</button>
+          <button id="btn-cal-prev-week" class="calendar-nav-btn py-1 px-2.5 text-xs hover:bg-slate-800 transition-colors" title="Previous Week">◀</button>
           <span class="text-base font-extrabold text-white px-2">
             ${monthName} ${date.getFullYear()}
           </span>
-          <button id="btn-cal-next-week" class="calendar-nav-btn py-1 px-2 text-xs">▶</button>
+          <button id="btn-cal-next-week" class="calendar-nav-btn py-1 px-2.5 text-xs hover:bg-slate-800 transition-colors" title="Next Week">▶</button>
+        </div>
+
+        <!-- Real-time Live Clock Badge -->
+        <div class="hidden md:flex items-center gap-2 px-2.5 py-1 bg-slate-950/80 border border-slate-800 text-slate-300 rounded-lg text-xs font-mono font-medium shadow-inner">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="cal-live-clock">--:--:--</span>
         </div>
       </div>
 
@@ -275,10 +274,27 @@ function renderTimelineMatrix({ weekDays, technicians, shifts, jobs, effectiveTe
       `;
     }).join('');
 
+    // Dynamic Real-time Red Line Indicator on Today's column
+    const isToday = dateStr === todayStr;
+    const now = new Date();
+    const nowHour = now.getHours();
+    const nowMin = now.getMinutes();
+    let timeLineHTML = '';
+    if (isToday && nowHour >= START_HOUR && nowHour <= END_HOUR) {
+      const lineTopPx = Math.round((nowHour - START_HOUR + nowMin / 60) * SLOT_HEIGHT);
+      timeLineHTML = `
+        <div class="timeline-current-time-indicator" style="top: ${lineTopPx}px;" title="Current Time: ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}">
+          <div class="timeline-current-time-circle"></div>
+          <div class="timeline-current-time-bar"></div>
+        </div>
+      `;
+    }
+
     return `
-      <div class="timeline-day-col" data-col-index="${colIndex}">
+      <div class="timeline-day-col ${isToday ? 'is-today-col' : ''}" data-col-index="${colIndex}">
         ${slotCellsHTML}
         ${jobBlocksHTML}
+        ${timeLineHTML}
       </div>
     `;
   }).join('');
@@ -378,12 +394,13 @@ function renderMonthGridView({ technicians, shifts, jobs, effectiveTechId }) {
 
 // ── Event Listeners ──────────────────────────────────────────────────────────
 function attachCalendarListeners(weekDays) {
-  // Now button
+  // Today / Now Jump button
   const btnNow = document.getElementById('btn-cal-now');
   if (btnNow) {
     btnNow.addEventListener('click', () => {
-      calendarState.currentDate = new Date(2026, 8, 10);
-      calendarState.selectedDayIndex = 4; // Thursday
+      const today = new Date();
+      calendarState.currentDate = today;
+      calendarState.selectedDayIndex = today.getDay();
       renderCalendar();
     });
   }
@@ -404,6 +421,34 @@ function attachCalendarListeners(weekDays) {
       renderCalendar();
     });
   }
+
+  // Real-time live clock ticker
+  const clockEl = document.getElementById('cal-live-clock');
+  function updateLiveClock() {
+    if (!clockEl) return;
+    const n = new Date();
+    clockEl.textContent = n.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' (' + DAY_SHORT[n.getDay()] + ')';
+  }
+  updateLiveClock();
+
+  if (window._calClockInterval) {
+    clearInterval(window._calClockInterval);
+  }
+  window._calClockInterval = setInterval(() => {
+    updateLiveClock();
+    const now = new Date();
+    if (now.getSeconds() === 0 && calendarState.viewMode === 'timeline') {
+      const todayIndicator = document.querySelector('.timeline-current-time-indicator');
+      if (todayIndicator) {
+        const nowHour = now.getHours();
+        const nowMin = now.getMinutes();
+        if (nowHour >= START_HOUR && nowHour <= END_HOUR) {
+          const lineTopPx = Math.round((nowHour - START_HOUR + nowMin / 60) * SLOT_HEIGHT);
+          todayIndicator.style.top = `${lineTopPx}px`;
+        }
+      }
+    }
+  }, 1000);
 
   // Mode buttons
   const btnTimeline = document.getElementById('btn-mode-timeline');

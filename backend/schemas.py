@@ -91,6 +91,23 @@ class JobCreate(BaseModel):
     urgency: str = "normal"
     assigned_tech_id: Optional[str] = None
 
+class JobUpdate(BaseModel):
+    customer_name: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    zip_code: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    appliance_type: Optional[str] = None
+    brand: Optional[str] = None
+    issue_description: Optional[str] = None
+    scheduled_date: Optional[str] = None
+    scheduled_time_window: Optional[str] = None
+    urgency: Optional[str] = None
+    assigned_tech_id: Optional[str] = None
+    status: Optional[str] = None
+
 class JobStatusUpdate(BaseModel):
     status: str
     note: Optional[str] = None

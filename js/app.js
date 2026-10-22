@@ -128,7 +128,6 @@ function renderNavigationTabs(role) {
       }
     });
   });
-
 }
 
 function renderMobileNav(role) {
@@ -205,6 +204,12 @@ function populateTechDropdowns() {
     select.innerHTML = `<option value="">⚡ Available Pool (Unassigned)</option>` + 
       technicians.map(t => `<option value="${t.id}">${t.name} (${t.rating}★)</option>`).join('');
   }
+
+  const editSelect = document.getElementById('edit-assignedTechId');
+  if (editSelect) {
+    editSelect.innerHTML = `<option value="">⚡ Available Pool (Unassigned)</option>` + 
+      technicians.map(t => `<option value="${t.id}">${t.name} (${t.rating}★)</option>`).join('');
+  }
 }
 
 /* Global Modals & Form Handlers */
@@ -243,6 +248,38 @@ function attachModalGlobalEvents() {
       document.getElementById('modal-new-job').classList.remove('open');
       newJobForm.reset();
       showToast('New Repair Ticket created!');
+    });
+  }
+
+  // Edit Job Form Submit
+  const editJobForm = document.getElementById('form-edit-job');
+  if (editJobForm) {
+    editJobForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(editJobForm);
+      const jobId = formData.get('jobId');
+      const updateData = {
+        customerName: formData.get('customerName'),
+        phone: formData.get('phone'),
+        address: formData.get('address'),
+        city: formData.get('city'),
+        zipCode: formData.get('zipCode'),
+        applianceType: formData.get('applianceType'),
+        brand: formData.get('brand'),
+        issueDescription: formData.get('issueDescription'),
+        scheduledDate: formData.get('scheduledDate'),
+        scheduledTimeWindow: formData.get('scheduledTimeWindow'),
+        urgency: formData.get('urgency'),
+        assignedTechId: formData.get('assignedTechId') || null
+      };
+
+      await storage.updateJob(jobId, updateData);
+      document.getElementById('modal-edit-job').classList.remove('open');
+      showToast(`Ticket ${jobId} updated successfully!`);
+      // Refresh details modal if open
+      if (window.openJobDetailModal) {
+        window.openJobDetailModal(jobId);
+      }
     });
   }
 
@@ -369,6 +406,7 @@ function attachModalGlobalEvents() {
 window.openJobDetailModal = function(jobId) {
   const job = storage.getJobById(jobId);
   const technicians = storage.getTechnicians();
+  const role = storage.getRole();
   if (!job) return;
 
   const tech = technicians.find(t => t.id === job.assignedTechId);
@@ -429,20 +467,50 @@ window.openJobDetailModal = function(jobId) {
           </div>
         </div>
       ` : ''}
-
-      <!-- Print Invoice / Save PDF Button -->
-      <div class="border-t border-slate-800 pt-3 flex items-center justify-end">
-        <button type="button" class="btn btn-outline text-xs text-blue-300 border-blue-500/40 hover:bg-blue-500/10 flex items-center gap-1.5 py-1.5 px-3 rounded-lg cursor-pointer" onclick="window.print()">
-          <span>🖨️</span>
-          <span>Print Invoice / Save PDF</span>
-        </button>
-      </div>
     </div>
   `;
+
+  // Edit Button visibility (Available to Owner and Dispatcher)
+  const editBtn = document.getElementById('btn-edit-job-trigger');
+  if (editBtn) {
+    if (['owner', 'dispatcher'].includes(role)) {
+      editBtn.classList.remove('hidden');
+      editBtn.onclick = () => {
+        document.getElementById('modal-job-details').classList.remove('open');
+        window.openEditJobModal(jobId);
+      };
+    } else {
+      editBtn.classList.add('hidden');
+    }
+  }
 
   document.getElementById('modal-job-details').classList.add('open');
 };
 window.openJobDetails = window.openJobDetailModal;
+
+window.openEditJobModal = function(jobId) {
+  const job = storage.getJobById(jobId);
+  if (!job) return;
+
+  populateTechDropdowns();
+
+  document.getElementById('edit-job-id-title').textContent = job.id;
+  document.getElementById('edit-job-id').value = job.id;
+  document.getElementById('edit-customerName').value = job.customerName || '';
+  document.getElementById('edit-phone').value = job.phone || '';
+  document.getElementById('edit-address').value = job.address || '';
+  document.getElementById('edit-city').value = job.city || 'Austin';
+  document.getElementById('edit-zipCode').value = job.zipCode || '78701';
+  document.getElementById('edit-applianceType').value = job.applianceType || 'Refrigerator';
+  document.getElementById('edit-brand').value = job.brand || 'Whirlpool';
+  document.getElementById('edit-issueDescription').value = job.issueDescription || '';
+  document.getElementById('edit-scheduledDate').value = job.scheduledDate || '';
+  document.getElementById('edit-scheduledTimeWindow').value = job.scheduledTimeWindow || '8:00 AM - 11:00 AM';
+  document.getElementById('edit-urgency').value = job.urgency || 'Medium';
+  document.getElementById('edit-assignedTechId').value = job.assignedTechId || '';
+
+  document.getElementById('modal-edit-job').classList.add('open');
+};
 
 window.openBillingModal = function(jobId) {
   const job = storage.getJobById(jobId);

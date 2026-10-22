@@ -95,22 +95,37 @@ export function normalizeJob(job) {
 }
 
 export function jobToBackendPayload(jobData) {
-  return {
-    customer_name: jobData.customerName || jobData.customer_name,
-    phone: jobData.phone,
-    address: jobData.address,
-    city: jobData.city || 'Austin',
-    zip_code: jobData.zipCode || jobData.zip_code || '78701',
-    latitude: jobData.latitude || null,
-    longitude: jobData.longitude || null,
-    appliance_type: jobData.applianceType || jobData.appliance_type,
-    brand: jobData.brand,
-    issue_description: jobData.issueDescription || jobData.issue_description,
-    scheduled_date: jobData.scheduledDate || jobData.scheduled_date,
-    scheduled_time_window: jobData.scheduledTimeWindow || jobData.scheduled_time_window,
-    urgency: jobData.urgency || 'normal',
-    assigned_tech_id: jobData.assignedTechId || jobData.assigned_tech_id || null
-  };
+  const payload = {};
+  if (jobData.customerName !== undefined || jobData.customer_name !== undefined) {
+    payload.customer_name = jobData.customerName || jobData.customer_name;
+  }
+  if (jobData.phone !== undefined) payload.phone = jobData.phone;
+  if (jobData.address !== undefined) payload.address = jobData.address;
+  if (jobData.city !== undefined) payload.city = jobData.city;
+  if (jobData.zipCode !== undefined || jobData.zip_code !== undefined) {
+    payload.zip_code = jobData.zipCode || jobData.zip_code;
+  }
+  if (jobData.latitude !== undefined) payload.latitude = jobData.latitude;
+  if (jobData.longitude !== undefined) payload.longitude = jobData.longitude;
+  if (jobData.applianceType !== undefined || jobData.appliance_type !== undefined) {
+    payload.appliance_type = jobData.applianceType || jobData.appliance_type;
+  }
+  if (jobData.brand !== undefined) payload.brand = jobData.brand;
+  if (jobData.issueDescription !== undefined || jobData.issue_description !== undefined) {
+    payload.issue_description = jobData.issueDescription || jobData.issue_description;
+  }
+  if (jobData.scheduledDate !== undefined || jobData.scheduled_date !== undefined) {
+    payload.scheduled_date = jobData.scheduledDate || jobData.scheduled_date;
+  }
+  if (jobData.scheduledTimeWindow !== undefined || jobData.scheduled_time_window !== undefined) {
+    payload.scheduled_time_window = jobData.scheduledTimeWindow || jobData.scheduled_time_window;
+  }
+  if (jobData.urgency !== undefined) payload.urgency = jobData.urgency;
+  if (jobData.assignedTechId !== undefined || jobData.assigned_tech_id !== undefined) {
+    payload.assigned_tech_id = jobData.assignedTechId || jobData.assigned_tech_id || null;
+  }
+  if (jobData.status !== undefined) payload.status = jobData.status;
+  return payload;
 }
 
 export function normalizeTech(tech) {
@@ -201,6 +216,15 @@ export const api = {
       const payload = jobToBackendPayload(jobData);
       const res = await request('/jobs', {
         method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      return normalizeJob(res);
+    },
+
+    async update(jobId, jobData) {
+      const payload = jobToBackendPayload(jobData);
+      const res = await request(`/jobs/${jobId}`, {
+        method: 'PUT',
         body: JSON.stringify(payload)
       });
       return normalizeJob(res);

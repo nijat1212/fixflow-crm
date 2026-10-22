@@ -218,7 +218,17 @@ function attachDispatcherEvents() {
   if (createBtn) {
     createBtn.addEventListener('click', () => {
       const modal = document.getElementById('modal-new-job');
-      if (modal) modal.classList.add('open');
+      if (modal) {
+        const dateInput = modal.querySelector('input[name="scheduledDate"]');
+        if (dateInput && !dateInput.value) {
+          const today = new Date();
+          const y = today.getFullYear();
+          const m = String(today.getMonth() + 1).padStart(2, '0');
+          const d = String(today.getDate()).padStart(2, '0');
+          dateInput.value = `${y}-${m}-${d}`;
+        }
+        modal.classList.add('open');
+      }
     });
   }
 

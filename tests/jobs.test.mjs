@@ -305,7 +305,7 @@ async function runJobVerificationTests() {
       }
     }
 
-    // ── Test 12: RBAC Security — Technician cannot create jobs
+    // ── Test 12: RBAC Security — Technician cannot create jobs (Strictly Blocked)
     try {
       const res = await fetch(`${BASE_URL}/jobs`, {
         method: 'POST',
@@ -336,7 +336,71 @@ async function runJobVerificationTests() {
       logFail('RBAC Security: Technician job creation restriction', err);
     }
 
-    // ── Test 13: RBAC Security — Technician can only access assigned jobs
+    // ── Test 13: RBAC Security — Technician cannot edit/update core job details
+    if (createdJobIds.length > 0) {
+      const targetJobId = createdJobIds[0];
+      try {
+        const res = await fetch(`${BASE_URL}/jobs/${targetJobId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${techToken}`
+          },
+          body: JSON.stringify({
+            customer_name: 'Hacked Name by Tech',
+            brand: 'Bosch'
+          })
+        });
+
+        if (res.status === 403) {
+          logPass('RBAC Security: Technician blocked from editing job details (HTTP 403 Forbidden)');
+        } else {
+          throw new Error(`Expected HTTP 403 Forbidden for tech edit, got ${res.status}`);
+        }
+      } catch (err) {
+        logFail('RBAC Security: Technician edit job restriction', err);
+      }
+    }
+
+    // ── Test 14: Owner Full Edit Capability — PUT /api/jobs/{id}
+    if (createdJobIds.length > 0) {
+      const targetJobId = createdJobIds[0];
+      try {
+        const res = await fetch(`${BASE_URL}/jobs/${targetJobId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${ownerToken}`
+          },
+          body: JSON.stringify({
+            customer_name: 'VIP Updated Client',
+            phone: '(512) 777-9999',
+            address: '777 Presidential Blvd',
+            brand: 'Miele',
+            issue_description: 'Updated diagnostic details by Owner',
+            urgency: 'urgent'
+          })
+        });
+
+        const updated = await res.json();
+        if (!res.ok) throw new Error(updated.detail || `HTTP ${res.status}`);
+
+        if (
+          updated.customer_name === 'VIP Updated Client' &&
+          updated.phone === '(512) 777-9999' &&
+          updated.brand === 'Miele' &&
+          updated.urgency === 'urgent'
+        ) {
+          logPass(`Owner capability: Successfully updated job #${targetJobId} details via PUT /api/jobs/{id}`);
+        } else {
+          throw new Error(`Updated fields mismatch: ${JSON.stringify(updated)}`);
+        }
+      } catch (err) {
+        logFail('Owner update job capability test', err);
+      }
+    }
+
+    // ── Test 15: RBAC Security — Technician can only access assigned jobs
     try {
       // Create job assigned to tech_2 (Marcus)
       const res = await fetch(`${BASE_URL}/jobs`, {
@@ -375,7 +439,7 @@ async function runJobVerificationTests() {
       logFail('RBAC Security: Cross-technician job isolation', err);
     }
 
-    // ── Test 14: Security — Unauthenticated request rejected
+    // ── Test 16: Security — Unauthenticated request rejected
     try {
       const res = await fetch(`${BASE_URL}/jobs`, {
         method: 'POST',
@@ -401,7 +465,7 @@ async function runJobVerificationTests() {
       logFail('Security: Unauthenticated job creation check', err);
     }
 
-    // ── Test 15: Input Validation — Missing required fields rejected
+    // ── Test 17: Input Validation — Missing required fields rejected
     try {
       const res = await fetch(`${BASE_URL}/jobs`, {
         method: 'POST',

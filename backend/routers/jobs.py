@@ -78,6 +78,39 @@ def get_job(job_id: str, db: Session = Depends(get_db), current_user: models.Use
 
     return job
 
+@router.put("/{job_id}", response_model=schemas.JobResponse)
+@router.patch("/{job_id}", response_model=schemas.JobResponse)
+def update_job(
+    job_id: str,
+    data: schemas.JobUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(require_dispatcher_or_owner)
+):
+    job = db.query(models.Job).filter(models.Job.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    changed_fields = []
+    for field, val in data.dict(exclude_unset=True).items():
+        if val is not None and hasattr(job, field):
+            old_val = getattr(job, field)
+            if old_val != val:
+                setattr(job, field, val)
+                changed_fields.append(field)
+
+    if changed_fields:
+        job.updated_at = datetime.utcnow()
+        timeline_entry = models.JobTimeline(
+            job_id=job.id,
+            status=job.status,
+            note=f"Job updated by {current_user.name} ({current_user.role}): {', '.join(changed_fields)}"
+        )
+        db.add(timeline_entry)
+
+    db.commit()
+    db.refresh(job)
+    return job
+
 @router.post("/{job_id}/assign", response_model=schemas.JobResponse)
 def assign_job(
     job_id: str,

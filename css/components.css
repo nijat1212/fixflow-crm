@@ -412,6 +412,39 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
 }
 
+/* Live Current Time Line Indicator */
+.timeline-current-time-indicator {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.timeline-current-time-circle {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+  margin-left: -4px;
+  animation: pulse-time 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.timeline-current-time-bar {
+  flex: 1;
+  height: 2px;
+  background: #ef4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.8);
+}
+
+@keyframes pulse-time {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+
 .calendar-job-card.status-accepted { border-left-color: #06b6d4; }
 .calendar-job-card.status-en_route { border-left-color: #6366f1; }
 .calendar-job-card.status-in_route { border-left-color: #6366f1; }

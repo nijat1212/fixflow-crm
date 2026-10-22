@@ -300,6 +300,32 @@ class StorageManager {
     }
   }
 
+  async updateJob(jobId, jobData) {
+    try {
+      const updated = await api.jobs.update(jobId, jobData);
+      const currentJobs = this.getJobs();
+      const idx = currentJobs.findIndex(j => j.id === jobId);
+      if (idx >= 0) {
+        currentJobs[idx] = updated;
+      } else {
+        currentJobs.unshift(updated);
+      }
+      this.saveJobs(currentJobs);
+      return updated;
+    } catch (err) {
+      console.warn('[FixFlow] Remote updateJob error, falling back to local:', err.message);
+      const currentJobs = this.getJobs();
+      const idx = currentJobs.findIndex(j => j.id === jobId);
+      if (idx >= 0) {
+        const merged = { ...currentJobs[idx], ...jobData, updatedAt: new Date().toISOString() };
+        currentJobs[idx] = merged;
+        this.saveJobs(currentJobs);
+        return merged;
+      }
+      return null;
+    }
+  }
+
   async updateJobStatus(jobId, newStatus, note = '', costs = {}) {
     if (typeof note === 'object' && note !== null) {
       costs = note;
