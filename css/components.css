@@ -398,6 +398,15 @@
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
+.timeline-slot-cell.tech-read-only {
+  cursor: default !important;
+}
+
+.timeline-slot-cell.tech-read-only:hover {
+  background: #f8fafc !important;
+  border-color: #f1f5f9 !important;
+}
+
 .timeline-slot-cell:hover {
   background: rgba(219, 234, 254, 0.5);
   border-color: rgba(147, 197, 253, 0.6);

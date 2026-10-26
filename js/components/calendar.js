@@ -166,7 +166,7 @@ function renderCalendarControls({ isTechnician, currentTech, technicians, effect
 }
 
 // ── Timeline Matrix (Housecall Pro Style) ────────────────────────────────────
-function renderTimelineMatrix({ weekDays, technicians, shifts, jobs, effectiveTechId }) {
+function renderTimelineMatrix({ weekDays, technicians, shifts, jobs, effectiveTechId, isTechnician }) {
   const currentHour = new Date().getHours();
   const todayStr = formatISO(new Date());
 
@@ -231,10 +231,12 @@ function renderTimelineMatrix({ weekDays, technicians, shifts, jobs, effectiveTe
       dayJobs = dayJobs.filter(j => j.assignedTechId === effectiveTechId);
     }
 
-    // Render empty slot background cells
-    const slotCellsHTML = hoursList.map(h => `
-      <div class="timeline-slot-cell" data-date="${dateStr}" data-hour="${h}" title="${formatHourLabel(h)} - Click to schedule"></div>
-    `).join('');
+    // Render empty slot background cells (Technicians are view-only, cannot schedule)
+    const slotCellsHTML = hoursList.map(h => {
+      const slotTitle = isTechnician ? formatHourLabel(h) : `${formatHourLabel(h)} - Click to schedule`;
+      const cellClass = isTechnician ? 'timeline-slot-cell tech-read-only' : 'timeline-slot-cell';
+      return `<div class="${cellClass}" data-date="${dateStr}" data-hour="${h}" title="${slotTitle}"></div>`;
+    }).join('');
 
     // Render positioned job blocks
     const jobBlocksHTML = dayJobs.map(job => {
@@ -507,19 +509,22 @@ function attachCalendarListeners(weekDays) {
     });
   });
 
-  // Empty slot clicks -> opens new job modal with preselected time
-  document.querySelectorAll('.timeline-slot-cell').forEach(slot => {
-    slot.addEventListener('click', () => {
-      const date = slot.getAttribute('data-date');
-      const hour = parseInt(slot.getAttribute('data-hour'), 10);
-      const modal = document.getElementById('modal-new-job');
-      if (modal) {
-        const dateInput = modal.querySelector('input[name="scheduledDate"]');
-        if (dateInput) dateInput.value = date;
-        modal.classList.add('open');
-      }
+  // Empty slot clicks -> opens new job modal with preselected time (Owner & Dispatcher ONLY)
+  const userRole = storage.getRole();
+  if (userRole !== 'technician') {
+    document.querySelectorAll('.timeline-slot-cell:not(.tech-read-only)').forEach(slot => {
+      slot.addEventListener('click', () => {
+        const date = slot.getAttribute('data-date');
+        const hour = parseInt(slot.getAttribute('data-hour'), 10);
+        const modal = document.getElementById('modal-new-job');
+        if (modal) {
+          const dateInput = modal.querySelector('input[name="scheduledDate"]');
+          if (dateInput) dateInput.value = date;
+          modal.classList.add('open');
+        }
+      });
     });
-  });
+  }
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

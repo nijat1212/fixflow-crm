@@ -278,25 +278,23 @@ class StorageManager {
   }
 
   async saveJob(jobData) {
+    if (this.getRole() === 'technician') {
+      throw new Error('Access denied: Technicians are not authorized to create tickets.');
+    }
     try {
       const newJob = await api.jobs.create(jobData);
       const currentJobs = this.getJobs();
       const updated = [newJob, ...currentJobs.filter(j => j.id !== newJob.id)];
       this.saveJobs(updated);
+      this.notifySubscribers('jobs');
       return newJob;
     } catch (err) {
-      console.warn('[FixFlow] Remote saveJob error, falling back to local:', err.message);
-      const jobs = this.getJobs();
-      const fallback = {
-        ...jobData,
-        id: jobData.id || `job_${Date.now()}`,
-        status: jobData.status || 'draft_ticket',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        timeline: [{ timestamp: new Date().toISOString(), status: 'draft_ticket', note: 'Ticket created locally' }]
-      };
-      this.saveJobs([fallback, ...jobs]);
-      return fallback;
+      // Never create fake local tickets on permission errors (403 Forbidden)
+      if (err.message && (err.message.includes('403') || err.message.toLowerCase().includes('forbidden') || err.message.toLowerCase().includes('denied'))) {
+        throw err;
+      }
+      console.warn('[FixFlow] Remote saveJob notice:', err.message);
+      throw err;
     }
   }
 

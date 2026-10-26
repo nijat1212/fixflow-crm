@@ -228,26 +228,35 @@ function attachModalGlobalEvents() {
   if (newJobForm) {
     newJobForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const formData = new FormData(newJobForm);
-      const jobData = {
-        customerName: formData.get('customerName'),
-        phone: formData.get('phone'),
-        address: formData.get('address'),
-        city: formData.get('city'),
-        zipCode: formData.get('zipCode'),
-        applianceType: formData.get('applianceType'),
-        brand: formData.get('brand'),
-        issueDescription: formData.get('issueDescription'),
-        scheduledDate: formData.get('scheduledDate'),
-        scheduledTimeWindow: formData.get('scheduledTimeWindow'),
-        urgency: formData.get('urgency'),
-        assignedTechId: formData.get('assignedTechId') || null
-      };
+      if (storage.getRole() === 'technician') {
+        showToast('Access Denied: Technicians are not permitted to create jobs.', 'error');
+        document.getElementById('modal-new-job').classList.remove('open');
+        return;
+      }
+      try {
+        const formData = new FormData(newJobForm);
+        const jobData = {
+          customerName: formData.get('customerName'),
+          phone: formData.get('phone'),
+          address: formData.get('address'),
+          city: formData.get('city'),
+          zipCode: formData.get('zipCode'),
+          applianceType: formData.get('applianceType'),
+          brand: formData.get('brand'),
+          issueDescription: formData.get('issueDescription'),
+          scheduledDate: formData.get('scheduledDate'),
+          scheduledTimeWindow: formData.get('scheduledTimeWindow'),
+          urgency: formData.get('urgency'),
+          assignedTechId: formData.get('assignedTechId') || null
+        };
 
-      await storage.saveJob(jobData);
-      document.getElementById('modal-new-job').classList.remove('open');
-      newJobForm.reset();
-      showToast('New Repair Ticket created!');
+        await storage.saveJob(jobData);
+        document.getElementById('modal-new-job').classList.remove('open');
+        newJobForm.reset();
+        showToast('New Repair Ticket created!');
+      } catch (err) {
+        showToast(err.message || 'Failed to create ticket', 'error');
+      }
     });
   }
 
