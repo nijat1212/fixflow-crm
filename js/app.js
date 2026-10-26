@@ -67,6 +67,19 @@ function renderApp() {
   if (desktopNav) desktopNav.classList.remove('hidden');
   if (mobileNav) mobileNav.classList.remove('hidden');
 
+  // Ensure new job modal is strictly inaccessible for technicians
+  const modalNewJob = document.getElementById('modal-new-job');
+  if (modalNewJob) {
+    if (session.role === 'technician') {
+      modalNewJob.classList.remove('open');
+      modalNewJob.style.display = 'none';
+      modalNewJob.setAttribute('inert', '');
+    } else {
+      modalNewJob.style.display = '';
+      modalNewJob.removeAttribute('inert');
+    }
+  }
+
   renderNavigationTabs(session.role);
   renderMobileNav(session.role);
   renderCurrentView();

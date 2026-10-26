@@ -40,7 +40,7 @@ export function renderCalendar() {
 
   const userRole = storage.getRole();
   const activeTechId = storage.getActiveTechId();
-  const isTechnician = userRole === 'technician' && !!activeTechId;
+  const isTechnician = userRole === 'technician';
   const technicians = storage.getTechnicians();
   const shifts = storage.getShifts();
   const jobs = storage.getJobs();

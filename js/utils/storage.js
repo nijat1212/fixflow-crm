@@ -22,6 +22,20 @@ class StorageManager {
 
   // Initialize local fallback data if storage is completely empty
   _initLocalData() {
+    // Purge any phantom timestamp jobs from previous test sessions
+    try {
+      const existing = localStorage.getItem(STORAGE_KEYS.JOBS);
+      if (existing) {
+        const parsed = JSON.parse(existing);
+        const filtered = parsed.filter(item => !/^job_\d{10,}$/.test(item.id));
+        if (filtered.length !== parsed.length) {
+          localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(filtered));
+        }
+      }
+    } catch {
+      // ignore
+    }
+
     if (!localStorage.getItem(STORAGE_KEYS.JOBS)) {
       localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(INITIAL_JOBS));
     }
@@ -261,7 +275,14 @@ class StorageManager {
   getJobs() {
     try {
       const j = localStorage.getItem(STORAGE_KEYS.JOBS);
-      return j ? JSON.parse(j) : INITIAL_JOBS;
+      let jobs = j ? JSON.parse(j) : INITIAL_JOBS;
+      // Auto-purge any client-side temporary or phantom jobs (numeric timestamp IDs)
+      const cleaned = (jobs || []).filter(item => item && !/^job_\d{10,}$/.test(item.id));
+      if (cleaned.length !== jobs.length) {
+        localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(cleaned));
+        jobs = cleaned;
+      }
+      return jobs;
     } catch {
       return INITIAL_JOBS;
     }
