@@ -108,25 +108,25 @@ function renderCalendarControls({ isTechnician, currentTech, technicians, effect
   const monthName = MONTH_NAMES[date.getMonth()];
 
   return `
-    <div class="card p-3 bg-slate-900/90 border-slate-800 flex items-center justify-between flex-wrap gap-3">
+    <div class="card p-3 bg-white border border-slate-200 flex items-center justify-between flex-wrap gap-3 shadow-sm">
       <!-- Left: Now Button & Month Dropdown -->
       <div class="flex items-center gap-3">
-        <button id="btn-cal-now" class="calendar-nav-btn font-bold text-xs py-1.5 px-3 flex items-center gap-1.5 bg-blue-600/20 border-blue-500/40 text-blue-400 hover:bg-blue-600/30 transition-all cursor-pointer shadow-sm" title="Jump to Today & Current Time">
+        <button id="btn-cal-now" class="calendar-nav-btn font-bold text-xs py-1.5 px-3 flex items-center gap-1.5 bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100 transition-all cursor-pointer shadow-sm" title="Jump to Today & Current Time">
           <span>⚡</span>
           <span>Today / Now</span>
         </button>
 
         <div class="flex items-center gap-1">
-          <button id="btn-cal-prev-week" class="calendar-nav-btn py-1 px-2.5 text-xs hover:bg-slate-800 transition-colors" title="Previous Week">◀</button>
-          <span class="text-base font-extrabold text-white px-2">
+          <button id="btn-cal-prev-week" class="calendar-nav-btn py-1 px-2.5 text-xs hover:bg-slate-100 transition-colors" title="Previous Week">◀</button>
+          <span class="text-base font-extrabold text-slate-800 px-2">
             ${monthName} ${date.getFullYear()}
           </span>
-          <button id="btn-cal-next-week" class="calendar-nav-btn py-1 px-2.5 text-xs hover:bg-slate-800 transition-colors" title="Next Week">▶</button>
+          <button id="btn-cal-next-week" class="calendar-nav-btn py-1 px-2.5 text-xs hover:bg-slate-100 transition-colors" title="Next Week">▶</button>
         </div>
 
         <!-- Real-time Live Clock Badge -->
-        <div class="hidden md:flex items-center gap-2 px-2.5 py-1 bg-slate-950/80 border border-slate-800 text-slate-300 rounded-lg text-xs font-mono font-medium shadow-inner">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <div class="hidden md:flex items-center gap-2 px-2.5 py-1 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-xs font-mono font-medium shadow-sm">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
           <span id="cal-live-clock">--:--:--</span>
         </div>
       </div>
@@ -134,7 +134,7 @@ function renderCalendarControls({ isTechnician, currentTech, technicians, effect
       <!-- Right: Role & View Mode Switcher -->
       <div class="flex items-center gap-2">
         ${!isTechnician ? `
-          <select id="select-cal-tech" class="form-control text-xs py-1 px-2.5 bg-slate-950 border-slate-800 text-white rounded-lg">
+          <select id="select-cal-tech" class="form-control text-xs py-1 px-2.5 bg-white border-slate-200 text-slate-800 rounded-lg">
             <option value="all" ${effectiveTechId === 'all' ? 'selected' : ''}>👥 All Technicians</option>
             ${technicians.map(t => `
               <option value="${t.id}" ${effectiveTechId === t.id ? 'selected' : ''}>
@@ -143,13 +143,13 @@ function renderCalendarControls({ isTechnician, currentTech, technicians, effect
             `).join('')}
           </select>
         ` : `
-          <div class="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-lg text-xs font-bold flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <div class="px-2.5 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-xs font-bold flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
             <span>${currentTech ? currentTech.name : 'Technician'} Schedule</span>
           </div>
         `}
 
-        <div class="flex items-center bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+        <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
           <button id="btn-mode-timeline" class="calendar-view-btn ${calendarState.viewMode === 'timeline' ? 'active' : ''}">
             ⏱ Timeline
           </button>
