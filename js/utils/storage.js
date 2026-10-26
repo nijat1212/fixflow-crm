@@ -326,6 +326,20 @@ class StorageManager {
     }
   }
 
+  async deleteJob(jobId) {
+    try {
+      await api.jobs.delete(jobId);
+    } catch (err) {
+      console.warn('[FixFlow] Remote deleteJob notice:', err.message);
+      throw err;
+    }
+    const currentJobs = this.getJobs();
+    const filtered = currentJobs.filter(j => j.id !== jobId);
+    this.saveJobs(filtered);
+    this.notifySubscribers('jobs');
+    return true;
+  }
+
   async updateJobStatus(jobId, newStatus, note = '', costs = {}) {
     if (typeof note === 'object' && note !== null) {
       costs = note;

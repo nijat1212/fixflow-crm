@@ -484,6 +484,27 @@ window.openJobDetailModal = function(jobId) {
     }
   }
 
+  // Delete Button visibility (Strictly Available to Owner Only)
+  const deleteBtn = document.getElementById('btn-delete-job-trigger');
+  if (deleteBtn) {
+    if (role === 'owner') {
+      deleteBtn.classList.remove('hidden');
+      deleteBtn.onclick = async () => {
+        if (confirm(`Are you sure you want to permanently delete ticket ${jobId}? This action cannot be undone.`)) {
+          try {
+            await storage.deleteJob(jobId);
+            document.getElementById('modal-job-details').classList.remove('open');
+            showToast(`Ticket ${jobId} permanently deleted!`);
+          } catch (err) {
+            showToast(err.message || 'Failed to delete ticket', 'error');
+          }
+        }
+      };
+    } else {
+      deleteBtn.classList.add('hidden');
+    }
+  }
+
   document.getElementById('modal-job-details').classList.add('open');
 };
 window.openJobDetails = window.openJobDetailModal;

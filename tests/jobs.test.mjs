@@ -488,6 +488,99 @@ async function runJobVerificationTests() {
       logFail('Input Validation: Missing required fields check', err);
     }
 
+    // ── Test 18: RBAC Security — Technician blocked from deleting jobs (HTTP 403 Forbidden)
+    if (createdJobIds.length > 0) {
+      const deleteTargetId = createdJobIds[0];
+      try {
+        const res = await fetch(`${BASE_URL}/jobs/${deleteTargetId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${techToken}` }
+        });
+
+        if (res.status === 403) {
+          logPass('RBAC Security: Technician blocked from deleting job (HTTP 403 Forbidden)');
+        } else {
+          throw new Error(`Expected HTTP 403 Forbidden, got ${res.status}`);
+        }
+      } catch (err) {
+        logFail('RBAC Security: Technician job deletion test', err);
+      }
+    }
+
+    // ── Test 19: RBAC Security — Dispatcher blocked from deleting jobs (HTTP 403 Forbidden)
+    if (createdJobIds.length > 0) {
+      const deleteTargetId = createdJobIds[0];
+      try {
+        const res = await fetch(`${BASE_URL}/jobs/${deleteTargetId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${dispatchToken}` }
+        });
+
+        if (res.status === 403) {
+          logPass('RBAC Security: Dispatcher blocked from deleting job (HTTP 403 Forbidden)');
+        } else {
+          throw new Error(`Expected HTTP 403 Forbidden, got ${res.status}`);
+        }
+      } catch (err) {
+        logFail('RBAC Security: Dispatcher job deletion test', err);
+      }
+    }
+
+    // ── Test 20: Owner Capability — Successfully deletes job via DELETE /api/jobs/{id}
+    if (createdJobIds.length > 0) {
+      const deleteTargetId = createdJobIds[0];
+      try {
+        const res = await fetch(`${BASE_URL}/jobs/${deleteTargetId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${ownerToken}` }
+        });
+
+        if (res.ok) {
+          const body = await res.json();
+          if (body.status === 'ok') {
+            logPass(`Owner Capability: Successfully deleted job #${deleteTargetId} via DELETE /api/jobs/{id}`);
+          } else {
+            throw new Error(`Unexpected deletion response: ${JSON.stringify(body)}`);
+          }
+        } else {
+          throw new Error(`Expected HTTP 200 OK, got ${res.status}`);
+        }
+      } catch (err) {
+        logFail('Owner job deletion capability test', err);
+      }
+
+      // ── Test 21: Verification that deleted job returns HTTP 404
+      try {
+        const getRes = await fetch(`${BASE_URL}/jobs/${deleteTargetId}`, {
+          headers: { 'Authorization': `Bearer ${ownerToken}` }
+        });
+
+        if (getRes.status === 404) {
+          logPass(`Database Consistency: Verified deleted job #${deleteTargetId} is permanently removed (HTTP 404 Not Found)`);
+        } else {
+          throw new Error(`Expected HTTP 404 for deleted job, got ${getRes.status}`);
+        }
+      } catch (err) {
+        logFail('Deleted job HTTP 404 verification test', err);
+      }
+    }
+
+    // ── Test 22: Error Handling — Deleting non-existent job returns HTTP 404
+    try {
+      const res = await fetch(`${BASE_URL}/jobs/job_non_existent_999999`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${ownerToken}` }
+      });
+
+      if (res.status === 404) {
+        logPass('Error Handling: Deleting non-existent job returns HTTP 404 Not Found');
+      } else {
+        throw new Error(`Expected HTTP 404 for non-existent job, got ${res.status}`);
+      }
+    } catch (err) {
+      logFail('Non-existent job deletion test', err);
+    }
+
   } finally {
     if (serverProcess) {
       try {

@@ -251,6 +251,12 @@ export const api = {
         body: JSON.stringify({ tech_id: techId })
       });
       return normalizeJob(res);
+    },
+
+    async delete(jobId) {
+      return await request(`/jobs/${jobId}`, {
+        method: 'DELETE'
+      });
     }
   },
 

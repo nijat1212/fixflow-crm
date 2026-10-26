@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 import models
 import schemas
-from auth import get_current_user, require_dispatcher_or_owner
+from auth import get_current_user, require_dispatcher_or_owner, require_owner
 
 router = APIRouter(prefix="/api/jobs", tags=["Repair Jobs"])
 
@@ -187,3 +187,24 @@ def update_job_status(
     db.commit()
     db.refresh(job)
     return job
+
+@router.delete("/{job_id}")
+def delete_job(
+    job_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(require_owner)
+):
+    """
+    Permanently delete a repair ticket.
+    Strictly restricted to Business Owner role.
+    """
+    job = db.query(models.Job).filter(models.Job.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    # Cascade delete timeline entries explicitly to prevent orphan foreign keys
+    db.query(models.JobTimeline).filter(models.JobTimeline.job_id == job_id).delete()
+    db.delete(job)
+    db.commit()
+    return {"status": "ok", "message": f"Job {job_id} deleted successfully", "id": job_id}
+
