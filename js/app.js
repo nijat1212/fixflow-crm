@@ -369,13 +369,16 @@ function attachModalGlobalEvents() {
     const updateCalc = () => {
       const labor = parseFloat(laborInput.value) || 0;
       const parts = parseFloat(partsInput.value) || 0;
-      const tax = (labor + parts) * 0.0825;
-      const total = labor + parts + tax;
+      const total = labor + parts;
 
-      document.getElementById('calc-labor').textContent = formatCurrency(labor);
-      document.getElementById('calc-parts').textContent = formatCurrency(parts);
-      document.getElementById('calc-tax').textContent = formatCurrency(tax);
-      document.getElementById('calc-total').textContent = formatCurrency(total);
+      const calcLabor = document.getElementById('calc-labor');
+      if (calcLabor) calcLabor.textContent = formatCurrency(labor);
+      const calcParts = document.getElementById('calc-parts');
+      if (calcParts) calcParts.textContent = formatCurrency(parts);
+      const calcTax = document.getElementById('calc-tax');
+      if (calcTax) calcTax.textContent = formatCurrency(0);
+      const calcTotal = document.getElementById('calc-total');
+      if (calcTotal) calcTotal.textContent = formatCurrency(total);
     };
 
     laborInput.addEventListener('input', updateCalc);

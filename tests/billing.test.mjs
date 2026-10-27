@@ -92,21 +92,18 @@ export async function runBillingTests() {
     return { passed: testsPassed, failed: testsFailed, total: testsPassed + testsFailed };
   }
 
-  // ── TEST 1: Exact Tax & Invoice Math Calculation Verification ─────────────
+  // ── TEST 1: Subtotal & Final Invoice Calculation Verification (No Tax) ──────
   const laborCost = 150.00;
   const partsCost = 45.00;
-  const subtotal = laborCost + partsCost; // 195.00
-  const taxRate = 0.0825; // Texas standard 8.25%
-  const calculatedTax = Math.round(subtotal * taxRate * 100) / 100; // 16.09
-  const totalInvoice = Math.round((subtotal + calculatedTax) * 100) / 100; // 211.09
+  const totalInvoice = laborCost + partsCost; // 195.00
 
-  if (calculatedTax === 16.09 && totalInvoice === 211.09) {
+  if (totalInvoice === 195.00) {
     logPass(
-      'Tax & Final Invoice Formula Calculation',
-      `Labor: $150.00, Parts: $45.00, Tax (8.25%): $${calculatedTax.toFixed(2)} -> Total: $${totalInvoice.toFixed(2)}`
+      'Final Invoice Formula Calculation (Zero Tax / Straight Labor + Parts)',
+      `Labor: $150.00, Parts: $45.00 -> Total: $${totalInvoice.toFixed(2)}`
     );
   } else {
-    logFail('Invoice calculation formula error', `Tax: ${calculatedTax}, Total: ${totalInvoice}`);
+    logFail('Invoice calculation formula error', `Total: ${totalInvoice}`);
   }
 
   // ── TEST 2: Create a job assigned to tech_1 for completion testing ────────
@@ -146,7 +143,7 @@ export async function runBillingTests() {
     logFail('Test job creation exception', err);
   }
 
-  // ── TEST 3: Complete Job with Labor, Parts, Tax & Final Invoice ───────────
+  // ── TEST 3: Complete Job with Labor, Parts & Final Invoice (No Tax) ─────────
   const partsUsed = ['OEM Compressor Start Relay #W10613606', 'Run Capacitor 15uF'];
   const technicianNotes = 'Diagnosed bad relay. Replaced relay and capacitor. Verified temperature dropped to 37F.';
 
@@ -162,7 +159,6 @@ export async function runBillingTests() {
         labor_cost: laborCost,
         parts_cost: partsCost,
         diagnostic_fee: 0.0,
-        tax: calculatedTax,
         total_amount: totalInvoice,
         parts_used: partsUsed,
         note: technicianNotes
@@ -175,7 +171,7 @@ export async function runBillingTests() {
         completedJob.status === 'completed' &&
         completedJob.labor_cost === 150.00 &&
         completedJob.parts_cost === 45.00 &&
-        completedJob.total_amount === 211.09
+        completedJob.total_amount === 195.00
       ) {
         logPass(
           'POST /api/jobs/{id}/status (Job completed with invoice figures)',
@@ -225,7 +221,7 @@ export async function runBillingTests() {
 
     if (ownerFetch.ok) {
       const job = await ownerFetch.json();
-      if (job.total_amount === 211.09 && job.status === 'completed') {
+      if (job.total_amount === 195.00 && job.status === 'completed') {
         logPass('Owner retrieval of final completed invoice', `Confirmed Total: $${job.total_amount}`);
       } else {
         logFail('Owner retrieval invoice mismatch', JSON.stringify(job));
