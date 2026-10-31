@@ -247,12 +247,23 @@ function renderTimelineMatrix({ weekDays, technicians, shifts, jobs, effectiveTe
       const topPx = (startH - START_HOUR) * SLOT_HEIGHT + 3;
       const heightPx = duration * SLOT_HEIGHT - 6;
 
-      // Color theme: vibrant blue or slate card matching the reference screenshot
-      const tech = technicians.find(t => t.id === job.assignedTechId);
-      const isBlue = job.brand === 'Whirlpool' || job.assignedTechId === 'tech_1';
-      const bgStyle = isBlue 
-        ? 'background: linear-gradient(135deg, #1d4ed8, #2563eb); border: 1px solid #60a5fa;'
-        : 'background: #334155; border: 1px solid #475569;';
+      // Color theme: dynamically reflects job lifecycle status
+      const statusKey = (job.status || 'scheduled').toLowerCase();
+      const statusBgMap = {
+        'scheduled': 'background: linear-gradient(135deg, #1d4ed8, #2563eb); border: 1px solid #60a5fa;', // Blue
+        'assigned': 'background: linear-gradient(135deg, #1d4ed8, #2563eb); border: 1px solid #60a5fa;',
+        'accepted': 'background: linear-gradient(135deg, #0284c7, #0369a1); border: 1px solid #38bdf8;', // Cyan
+        'en_route': 'background: linear-gradient(135deg, #4338ca, #4f46e5); border: 1px solid #818cf8;', // Indigo
+        'in_route': 'background: linear-gradient(135deg, #4338ca, #4f46e5); border: 1px solid #818cf8;',
+        'in_progress': 'background: linear-gradient(135deg, #6d28d9, #7c3aed); border: 1px solid #a78bfa;', // Purple
+        'on_site': 'background: linear-gradient(135deg, #6d28d9, #7c3aed); border: 1px solid #a78bfa;',
+        'parts_needed': 'background: linear-gradient(135deg, #c2410c, #ea580c); border: 1px solid #fb923c;', // Orange
+        'waiting_for_parts': 'background: linear-gradient(135deg, #c2410c, #ea580c); border: 1px solid #fb923c;',
+        'completed': 'background: linear-gradient(135deg, #047857, #059669); border: 1px solid #34d399;', // Emerald
+        'draft_ticket': 'background: linear-gradient(135deg, #b45309, #d97706); border: 1px solid #fbbf24;', // Amber
+        'available': 'background: linear-gradient(135deg, #b45309, #d97706); border: 1px solid #fbbf24;'
+      };
+      const bgStyle = statusBgMap[statusKey] || 'background: linear-gradient(135deg, #1d4ed8, #2563eb); border: 1px solid #60a5fa;';
 
       const shortCust = formatShortCustomer(job.customerName);
       const shortAppliance = APPLIANCE_ABBR[job.applianceType] || (job.applianceType ? job.applianceType.slice(0, 4) : 'App');
@@ -333,7 +344,7 @@ function renderSummaryCardsView({ weekDays, technicians, shifts, jobs, effective
             </div>
             <div class="space-y-2">
               ${dayJobs.map(j => `
-                <div class="calendar-job-card cursor-pointer" data-job-id="${j.id}">
+                <div class="calendar-job-card status-${(j.status || 'scheduled').toLowerCase()} cursor-pointer" data-job-id="${j.id}">
                   <p class="font-bold text-white text-xs truncate">${j.customerName}</p>
                   <p class="text-2xs text-slate-300 truncate">${j.applianceType} • ${j.scheduledTimeWindow}</p>
                 </div>
@@ -375,7 +386,7 @@ function renderMonthGridView({ technicians, shifts, jobs, effectiveTechId }) {
         </div>
         <div class="space-y-1">
           ${dJobs.slice(0, 2).map(j => `
-            <div class="calendar-job-card text-2xs truncate py-0.5 px-1 font-semibold" data-job-id="${j.id}">
+            <div class="calendar-job-card status-${(j.status || 'scheduled').toLowerCase()} text-2xs truncate py-0.5 px-1 font-semibold" data-job-id="${j.id}">
               ${j.customerName}
             </div>
           `).join('')}

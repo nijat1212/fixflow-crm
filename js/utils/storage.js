@@ -307,7 +307,7 @@ class StorageManager {
       const currentJobs = this.getJobs();
       const updated = [newJob, ...currentJobs.filter(j => j.id !== newJob.id)];
       this.saveJobs(updated);
-      this.notifySubscribers('jobs');
+      this.notify('jobs_changed', updated);
       return newJob;
     } catch (err) {
       // Never create fake local tickets on permission errors (403 Forbidden)
@@ -355,7 +355,7 @@ class StorageManager {
     const currentJobs = this.getJobs();
     const filtered = currentJobs.filter(j => j.id !== jobId);
     this.saveJobs(filtered);
-    this.notifySubscribers('jobs');
+    this.notify('jobs_changed', filtered);
     return true;
   }
 

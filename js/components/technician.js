@@ -105,8 +105,13 @@ function renderTechJobCard(job) {
   const isOnSite = norm === 'onsite' || norm === 'inprogress';
   const isParts = norm === 'waitingforparts' || norm === 'partspending' || norm === 'partsneeded';
 
+  let statusClass = 'status-scheduled';
+  if (isInRoute) statusClass = 'status-en_route';
+  else if (isOnSite) statusClass = 'status-in_progress';
+  else if (isParts) statusClass = 'status-parts_needed';
+
   return `
-    <div class="tech-job-card card space-y-3 relative border-l-4 ${isOnSite ? 'border-l-purple-500' : isInRoute ? 'border-l-indigo-500' : isParts ? 'border-l-orange-500' : 'border-l-cyan-500'}">
+    <div class="tech-job-card card space-y-3 relative ${statusClass}">
       <!-- Top header -->
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">

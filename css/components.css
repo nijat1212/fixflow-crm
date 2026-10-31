@@ -469,13 +469,71 @@
   50% { opacity: 0.6; transform: scale(1.2); }
 }
 
-.calendar-job-card.status-accepted { border-left-color: #0284c7; }
-.calendar-job-card.status-en_route { border-left-color: #4f46e5; }
-.calendar-job-card.status-in_route { border-left-color: #4f46e5; }
-.calendar-job-card.status-on_site { border-left-color: #9333ea; }
-.calendar-job-card.status-parts_needed { border-left-color: #ea580c; }
-.calendar-job-card.status-completed { border-left-color: #059669; }
-.calendar-job-card.status-scheduled { border-left-color: #2563eb; }
+/* Tech Job Card Status Border Indicators */
+.tech-job-card {
+  border-left-width: 4px !important;
+  border-left-style: solid !important;
+  transition: border-left-color 0.2s ease, box-shadow 0.2s ease;
+}
+.tech-job-card.status-scheduled,
+.tech-job-card.status-assigned,
+.tech-job-card.status-accepted {
+  border-left-color: #2563eb !important; /* Blue */
+}
+.tech-job-card.status-en_route,
+.tech-job-card.status-in_route {
+  border-left-color: #4f46e5 !important; /* Indigo */
+}
+.tech-job-card.status-in_progress,
+.tech-job-card.status-on_site {
+  border-left-color: #7c3aed !important; /* Purple */
+}
+.tech-job-card.status-parts_needed,
+.tech-job-card.status-waiting_for_parts {
+  border-left-color: #ea580c !important; /* Orange */
+}
+.tech-job-card.status-completed {
+  border-left-color: #059669 !important; /* Emerald */
+}
+
+/* Dispatcher Table Row Status Left Accent */
+.job-table-row {
+  border-left: 3px solid transparent;
+  transition: border-left-color 0.2s ease, background-color 0.15s ease;
+}
+.job-table-row.status-available,
+.job-table-row.status-draft_ticket {
+  border-left-color: #f59e0b;
+}
+.job-table-row.status-scheduled,
+.job-table-row.status-assigned {
+  border-left-color: #2563eb;
+}
+.job-table-row.status-en_route,
+.job-table-row.status-in_route {
+  border-left-color: #4f46e5;
+}
+.job-table-row.status-in_progress,
+.job-table-row.status-on_site {
+  border-left-color: #7c3aed;
+}
+.job-table-row.status-parts_needed {
+  border-left-color: #ea580c;
+}
+.job-table-row.status-completed {
+  border-left-color: #059669;
+}
+
+.calendar-job-card.status-draft_ticket,
+.calendar-job-card.status-available { border-left-color: #f59e0b !important; }
+.calendar-job-card.status-accepted { border-left-color: #0284c7 !important; }
+.calendar-job-card.status-en_route { border-left-color: #4f46e5 !important; }
+.calendar-job-card.status-in_route { border-left-color: #4f46e5 !important; }
+.calendar-job-card.status-on_site { border-left-color: #7c3aed !important; }
+.calendar-job-card.status-in_progress { border-left-color: #7c3aed !important; }
+.calendar-job-card.status-parts_needed { border-left-color: #ea580c !important; }
+.calendar-job-card.status-completed { border-left-color: #059669 !important; }
+.calendar-job-card.status-scheduled { border-left-color: #2563eb !important; }
 
 /* Month Grid */
 .calendar-grid {

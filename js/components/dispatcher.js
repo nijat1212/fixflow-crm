@@ -179,7 +179,7 @@ function renderAvailableJobCard(job, technicians) {
 function renderJobTableRow(job, technicians) {
   const tech = technicians.find(t => t.id === job.assignedTechId);
   return `
-    <tr class="hover:bg-slate-800/40 transition-colors">
+    <tr class="hover:bg-slate-800/40 transition-colors job-table-row status-${(job.status || 'scheduled').toLowerCase()}">
       <td class="py-3 px-3 font-mono font-bold text-blue-400">${job.id}</td>
       <td class="py-3 px-3">
         <div class="font-semibold text-white">${job.customerName}</div>
