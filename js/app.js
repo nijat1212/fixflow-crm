@@ -236,6 +236,49 @@ function attachModalGlobalEvents() {
     });
   });
 
+  // New Job Photos state & preview handler
+  let newJobAttachedPhotos = [];
+  const newJobPhotoInput = document.getElementById('input-new-job-photos');
+  const newJobPhotoPreviewContainer = document.getElementById('new-job-photos-preview-container');
+  const newJobPhotoCount = document.getElementById('new-job-photo-count');
+
+  function renderNewJobPhotoPreviews() {
+    if (!newJobPhotoPreviewContainer) return;
+    newJobPhotoPreviewContainer.innerHTML = '';
+    if (newJobPhotoCount) {
+      newJobPhotoCount.textContent = newJobAttachedPhotos.length > 0 ? `${newJobAttachedPhotos.length} photo(s) ready` : 'Optional';
+    }
+    newJobAttachedPhotos.forEach((dataUrl, idx) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'relative group';
+      wrap.innerHTML = `
+        <img src="${dataUrl}" class="w-14 h-14 object-cover rounded-lg border border-slate-700 shadow" alt="Preview">
+        <button type="button" class="absolute -top-1.5 -right-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-2xs cursor-pointer shadow" data-remove-idx="${idx}">✕</button>
+      `;
+      wrap.querySelector('button').addEventListener('click', (ev) => {
+        ev.preventDefault();
+        newJobAttachedPhotos.splice(idx, 1);
+        renderNewJobPhotoPreviews();
+      });
+      newJobPhotoPreviewContainer.appendChild(wrap);
+    });
+  }
+
+  if (newJobPhotoInput) {
+    newJobPhotoInput.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files || []);
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          newJobAttachedPhotos.push(ev.target.result);
+          renderNewJobPhotoPreviews();
+        };
+        reader.readAsDataURL(file);
+      });
+      newJobPhotoInput.value = '';
+    });
+  }
+
   // New Job Form Submit
   const newJobForm = document.getElementById('form-new-job');
   if (newJobForm) {
@@ -255,17 +298,20 @@ function attachModalGlobalEvents() {
           city: formData.get('city'),
           zipCode: formData.get('zipCode'),
           applianceType: formData.get('applianceType'),
-          brand: formData.get('brand'),
+          brand: formData.get('brand') || '',
           issueDescription: formData.get('issueDescription'),
           scheduledDate: formData.get('scheduledDate'),
           scheduledTimeWindow: formData.get('scheduledTimeWindow'),
           urgency: formData.get('urgency'),
-          assignedTechId: formData.get('assignedTechId') || null
+          assignedTechId: formData.get('assignedTechId') || null,
+          photos: [...newJobAttachedPhotos]
         };
 
         await storage.saveJob(jobData);
         document.getElementById('modal-new-job').classList.remove('open');
         newJobForm.reset();
+        newJobAttachedPhotos = [];
+        renderNewJobPhotoPreviews();
         showToast('New Repair Ticket created!');
       } catch (err) {
         showToast(err.message || 'Failed to create ticket', 'error');
@@ -465,8 +511,24 @@ window.openJobDetailModal = function(jobId) {
 
       <div class="border-t border-slate-800 pt-2">
         <span class="text-muted block text-2xs uppercase font-bold">Appliance & Issue</span>
-        <p class="font-bold text-white text-sm mt-0.5">${job.brand} ${job.applianceType}</p>
+        <p class="font-bold text-white text-sm mt-0.5">${job.brand ? job.brand + ' ' : ''}${job.applianceType}</p>
         <p class="text-slate-300 mt-1 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">${job.issueDescription}</p>
+      </div>
+
+      <!-- Ticket Photos Gallery -->
+      <div class="border-t border-slate-800 pt-2">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-muted text-2xs uppercase font-bold">📸 Photos (${(job.photos || []).length})</span>
+          <label class="text-2xs text-blue-400 hover:text-blue-300 font-semibold cursor-pointer flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 py-1 px-2.5 rounded-lg">
+            <span>📷 + Upload Photo</span>
+            <input type="file" class="hidden" id="detail-job-photo-upload" accept="image/*" multiple>
+          </label>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          ${(job.photos && job.photos.length > 0) ? job.photos.map(p => `
+            <img src="${p}" alt="Job photo" class="w-16 h-16 object-cover rounded-lg border border-slate-700 hover:border-blue-400 cursor-pointer shadow transition" onclick="window.viewFullPhoto('${p}')">
+          `).join('') : '<p class="text-2xs text-muted italic">No photos attached yet. Tap "+ Upload Photo" to add equipment stickers or damage photos.</p>'}
+        </div>
       </div>
 
       <div class="grid grid-cols-2 gap-3 border-t border-slate-800 pt-2">
@@ -507,6 +569,29 @@ window.openJobDetailModal = function(jobId) {
     } else {
       editBtn.classList.add('hidden');
     }
+  }
+
+  // Ticket Detail Photo Upload Listener
+  const detailPhotoInput = document.getElementById('detail-job-photo-upload');
+  if (detailPhotoInput) {
+    detailPhotoInput.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+          try {
+            await storage.addPhotoToJob(jobId, ev.target.result);
+            showToast('Photo added to ticket!');
+            window.openJobDetailModal(jobId);
+          } catch (err) {
+            console.error('Failed to attach photo:', err);
+            showToast('Failed to attach photo', 'error');
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    });
   }
 
   // Delete Button visibility (Strictly Available to Owner Only)

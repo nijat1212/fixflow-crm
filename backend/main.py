@@ -1,6 +1,7 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from database import engine, Base
 from seed import seed
@@ -24,6 +25,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Serve uploaded photos statically
+uploads_dir = os.path.join(os.path.dirname(__file__), "uploads")
+os.makedirs(uploads_dir, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
+
 # Include Routers
 app.include_router(auth.router)
 app.include_router(jobs.router)
@@ -31,10 +37,25 @@ app.include_router(technicians.router)
 app.include_router(shifts.router)
 app.include_router(staff.router)
 
+def migrate_db():
+    try:
+        from sqlalchemy import inspect, text
+        with engine.connect() as conn:
+            inspector = inspect(engine)
+            columns = [c["name"] for c in inspector.get_columns("jobs")]
+            if "photos" not in columns:
+                conn.execute(text("ALTER TABLE jobs ADD COLUMN photos JSON DEFAULT '[]'"))
+                conn.commit()
+                print("[FixFlow DB] Added 'photos' column to jobs table.")
+    except Exception as e:
+        print("[FixFlow DB] Migration notice:", e)
+
 @app.on_event("startup")
 def on_startup():
+    migrate_db()
     # Automatically seed initial users & jobs if database is fresh
     seed()
+
 
 @app.get("/")
 def root():

@@ -421,6 +421,41 @@ class StorageManager {
     return await this.assignJob(jobId, techId);
   }
 
+  async addPhotoToJob(jobId, fileOrUrl) {
+    try {
+      let updated;
+      if (typeof fileOrUrl === 'string') {
+        updated = await api.jobs.addPhotoUrl(jobId, fileOrUrl);
+      } else {
+        updated = await api.jobs.uploadPhoto(jobId, fileOrUrl);
+      }
+      const currentJobs = this.getJobs();
+      const idx = currentJobs.findIndex(j => j.id === jobId);
+      if (idx >= 0) {
+        currentJobs[idx] = updated;
+      } else {
+        currentJobs.unshift(updated);
+      }
+      this.saveJobs(currentJobs);
+      this.notify('jobs_changed', currentJobs);
+      return updated;
+    } catch (err) {
+      console.warn('[FixFlow] Remote addPhotoToJob notice, saving locally:', err.message);
+      const jobs = this.getJobs();
+      const job = jobs.find(j => j.id === jobId);
+      if (job) {
+        if (!job.photos) job.photos = [];
+        const photoStr = typeof fileOrUrl === 'string' ? fileOrUrl : URL.createObjectURL(fileOrUrl);
+        job.photos.push(photoStr);
+        job.updatedAt = new Date().toISOString();
+        this.saveJobs(jobs);
+        this.notify('jobs_changed', jobs);
+        return job;
+      }
+      throw err;
+    }
+  }
+
   // ── Shifts & Scheduling ─────────────────────────────────────────────────────
   getShifts() {
     try {

@@ -90,6 +90,7 @@ class JobCreate(BaseModel):
     scheduled_time_window: str
     urgency: str = "normal"
     assigned_tech_id: Optional[str] = None
+    photos: Optional[List[str]] = []
 
 class JobUpdate(BaseModel):
     customer_name: Optional[str] = None
@@ -107,6 +108,7 @@ class JobUpdate(BaseModel):
     urgency: Optional[str] = None
     assigned_tech_id: Optional[str] = None
     status: Optional[str] = None
+    photos: Optional[List[str]] = None
 
 class JobStatusUpdate(BaseModel):
     status: str
@@ -144,6 +146,7 @@ class JobResponse(BaseModel):
     diagnostic_fee: float = 85.0
     total_amount: float = 0.0
     payment_status: str = "unpaid"
+    photos: Optional[List[str]] = []
     created_at: datetime
     updated_at: datetime
     timeline: List[JobTimelineResponse] = []

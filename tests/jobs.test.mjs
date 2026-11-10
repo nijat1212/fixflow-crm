@@ -581,6 +581,65 @@ async function runJobVerificationTests() {
       logFail('Non-existent job deletion test', err);
     }
 
+    // ── Test 23: Free-Text Appliance & Initial Photo Attachment Creation
+    let customJobId = null;
+    try {
+      const payload = {
+        customer_name: 'Sophia Anderson',
+        phone: '(512) 555-9090',
+        address: '804 Colorado St',
+        city: 'Austin',
+        zip_code: '78701',
+        appliance_type: 'Commercial Wine Cooler & Ice Machine',
+        brand: 'Sub-Zero / Scotsman',
+        issue_description: 'Compressor clicking, cooling zone 2 at 64 degrees instead of 45',
+        scheduled_date: '2026-09-20',
+        scheduled_time_window: '8:00 AM - 11:00 AM',
+        urgency: 'urgent',
+        photos: ['data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD']
+      };
+
+      const res = await fetch(`${BASE_URL}/jobs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${ownerToken}`
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (res.ok && data.id && data.appliance_type === payload.appliance_type && (data.photos || []).length === 1) {
+        customJobId = data.id;
+        logPass(`Free-form appliance & initial photo creation verified (ID: ${data.id}, Appliance: "${data.appliance_type}")`);
+      } else {
+        throw new Error(`Failed to create custom appliance ticket: ${JSON.stringify(data)}`);
+      }
+    } catch (err) {
+      logFail('Free-form appliance & initial photo creation', err);
+    }
+
+    // ── Test 24: Photo attachment on existing ticket (POST /api/jobs/{id}/photos/url)
+    if (customJobId) {
+      try {
+        const photoRes = await fetch(`${BASE_URL}/jobs/${customJobId}/photos/url`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${ownerToken}`
+          },
+          body: JSON.stringify({ photo_url: '/uploads/model_sticker_sample.jpg' })
+        });
+        const photoData = await photoRes.json();
+        if (photoRes.ok && photoData.photos && photoData.photos.length === 2) {
+          logPass(`Photo attachment to existing job verified (Total photos: ${photoData.photos.length})`);
+        } else {
+          throw new Error(`Failed to attach photo to job: ${JSON.stringify(photoData)}`);
+        }
+      } catch (err) {
+        logFail('Photo attachment to existing job', err);
+      }
+    }
+
   } finally {
     if (serverProcess) {
       try {

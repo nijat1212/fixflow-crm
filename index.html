@@ -93,48 +93,45 @@
 
           <!-- Appliance Info -->
           <div class="pt-2 border-t border-slate-800">
-            <h4 class="text-2xs font-bold text-blue-400 uppercase tracking-wider mb-2">2. Appliance Information</h4>
+            <h4 class="text-2xs font-bold text-blue-400 uppercase tracking-wider mb-2">2. Appliance & Issue</h4>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div class="form-group mb-0">
-                <label class="form-label">Appliance Category</label>
-                <select name="applianceType" class="form-control" required>
-                  <option value="Refrigerator">Refrigerator</option>
-                  <option value="Washing Machine">Washing Machine</option>
-                  <option value="Dryer">Dryer</option>
-                  <option value="Dishwasher">Dishwasher</option>
-                  <option value="Oven / Range">Oven / Range</option>
-                  <option value="Microwave">Microwave</option>
-                  <option value="Freezer">Freezer</option>
-                  <option value="Garbage Disposal">Garbage Disposal</option>
-                </select>
+                <label class="form-label">Appliance / Equipment</label>
+                <input type="text" name="applianceType" class="form-control" placeholder="e.g. Refrigerator, Washer, Oven, Dryer..." required>
               </div>
 
               <div class="form-group mb-0">
-                <label class="form-label">Brand</label>
-                <select name="brand" class="form-control" required>
-                  <option value="Whirlpool">Whirlpool</option>
-                  <option value="Samsung">Samsung</option>
-                  <option value="LG">LG</option>
-                  <option value="GE Profile">GE Profile</option>
-                  <option value="Maytag">Maytag</option>
-                  <option value="Bosch">Bosch</option>
-                  <option value="KitchenAid">KitchenAid</option>
-                  <option value="Frigidaire">Frigidaire</option>
-                  <option value="Sub-Zero">Sub-Zero</option>
-                  <option value="Kenmore">Kenmore</option>
-                </select>
+                <label class="form-label">Brand / Make (Optional)</label>
+                <input type="text" name="brand" class="form-control" placeholder="e.g. Whirlpool, Samsung, LG, Bosch...">
               </div>
 
               <div class="form-group mb-0 md:col-span-2">
                 <label class="form-label">Issue Description / Symptoms</label>
-                <textarea name="issueDescription" class="form-control" rows="2" placeholder="e.g. Refrigerator warm, freezer working. Water leaking under crisper drawer." required></textarea>
+                <textarea name="issueDescription" class="form-control" rows="2" placeholder="e.g. Not cooling, making loud rattling noise, leaking water..." required></textarea>
               </div>
             </div>
           </div>
 
+          <!-- Photo Upload Section -->
+          <div class="pt-2 border-t border-slate-800">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="text-2xs font-bold text-blue-400 uppercase tracking-wider">3. Attach Photos (Sticker / Damage)</h4>
+              <span class="text-2xs text-slate-400" id="new-job-photo-count">Optional</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <label class="btn btn-outline text-xs py-2 px-3 border-slate-700 hover:border-blue-500 hover:bg-blue-500/10 text-slate-200 rounded-xl cursor-pointer flex items-center gap-2">
+                <span class="text-base">📷</span>
+                <span>Select / Take Photos</span>
+                <input type="file" id="input-new-job-photos" multiple accept="image/*" class="hidden">
+              </label>
+              <p class="text-2xs text-muted">Upload model serial tag sticker or damage photos.</p>
+            </div>
+            <div id="new-job-photos-preview-container" class="flex flex-wrap gap-2 mt-2.5"></div>
+          </div>
+
           <!-- Dispatch & Scheduling -->
           <div class="pt-2 border-t border-slate-800">
-            <h4 class="text-2xs font-bold text-blue-400 uppercase tracking-wider mb-2">3. Scheduling & Dispatch</h4>
+            <h4 class="text-2xs font-bold text-blue-400 uppercase tracking-wider mb-2">4. Scheduling & Dispatch</h4>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div class="form-group mb-0">
                 <label class="form-label">Service Date</label>
@@ -251,36 +248,16 @@
 
           <!-- Appliance Info -->
           <div class="pt-2 border-t border-slate-800">
-            <h4 class="text-2xs font-bold text-amber-400 uppercase tracking-wider mb-2">2. Appliance Information</h4>
+            <h4 class="text-2xs font-bold text-amber-400 uppercase tracking-wider mb-2">2. Appliance & Issue</h4>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div class="form-group mb-0">
-                <label class="form-label">Appliance Category</label>
-                <select name="applianceType" id="edit-applianceType" class="form-control" required>
-                  <option value="Refrigerator">Refrigerator</option>
-                  <option value="Washing Machine">Washing Machine</option>
-                  <option value="Dryer">Dryer</option>
-                  <option value="Dishwasher">Dishwasher</option>
-                  <option value="Oven / Range">Oven / Range</option>
-                  <option value="Microwave">Microwave</option>
-                  <option value="Freezer">Freezer</option>
-                  <option value="Garbage Disposal">Garbage Disposal</option>
-                </select>
+                <label class="form-label">Appliance / Equipment</label>
+                <input type="text" name="applianceType" id="edit-applianceType" class="form-control" placeholder="e.g. Refrigerator, Washer, Oven..." required>
               </div>
 
               <div class="form-group mb-0">
-                <label class="form-label">Brand</label>
-                <select name="brand" id="edit-brand" class="form-control" required>
-                  <option value="Whirlpool">Whirlpool</option>
-                  <option value="Samsung">Samsung</option>
-                  <option value="LG">LG</option>
-                  <option value="GE Profile">GE Profile</option>
-                  <option value="Maytag">Maytag</option>
-                  <option value="Bosch">Bosch</option>
-                  <option value="KitchenAid">KitchenAid</option>
-                  <option value="Frigidaire">Frigidaire</option>
-                  <option value="Sub-Zero">Sub-Zero</option>
-                  <option value="Kenmore">Kenmore</option>
-                </select>
+                <label class="form-label">Brand / Make (Optional)</label>
+                <input type="text" name="brand" id="edit-brand" class="form-control" placeholder="e.g. Whirlpool, Samsung, LG...">
               </div>
 
               <div class="form-group mb-0 md:col-span-2">
@@ -507,6 +484,20 @@
         <button type="button" id="btn-copy-sms" class="btn btn-emerald w-full flex items-center justify-center gap-2">
           <span>📋 Copy Credentials for SMS</span>
         </button>
+      </div>
+    </div>
+  </div>
+
+  
+  <!-- MODAL: Fullscreen High-Res Photo Lightbox -->
+  <div id="modal-photo-viewer" class="modal-backdrop">
+    <div class="relative max-w-3xl w-full mx-4 p-3 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl flex flex-col items-center">
+      <div class="w-full flex items-center justify-between pb-2 border-b border-slate-800 mb-2">
+        <span class="text-xs font-bold text-slate-300">📸 FixFlow Photo Viewer</span>
+        <button type="button" class="btn-close-modal text-slate-400 hover:text-white text-xl cursor-pointer px-2">✕</button>
+      </div>
+      <div class="p-2 w-full flex items-center justify-center max-h-[80vh] overflow-hidden">
+        <img id="modal-photo-viewer-img" src="" alt="Job photo" class="max-w-full max-h-[75vh] object-contain rounded-xl shadow-lg border border-slate-800">
       </div>
     </div>
   </div>

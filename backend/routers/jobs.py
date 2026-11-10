@@ -1,6 +1,10 @@
 from typing import List, Optional
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status
+import os
+import uuid
+import shutil
+from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -50,7 +54,8 @@ def create_job(
         scheduled_time_window=data.scheduled_time_window,
         urgency=data.urgency,
         assigned_tech_id=data.assigned_tech_id,
-        status="scheduled" if data.assigned_tech_id else "draft_ticket"
+        status="scheduled" if data.assigned_tech_id else "draft_ticket",
+        photos=data.photos or []
     )
 
     db.add(new_job)
@@ -208,3 +213,76 @@ def delete_job(
     db.commit()
     return {"status": "ok", "message": f"Job {job_id} deleted successfully", "id": job_id}
 
+
+class PhotoUrlRequest(BaseModel):
+    photo_url: str
+
+@router.post("/{job_id}/photos", response_model=schemas.JobResponse)
+def upload_job_photo(
+    job_id: str,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """Upload photo image file for a job (appliance model tag, damage, repair progress, invoice)"""
+    job = db.query(models.Job).filter(models.Job.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    if current_user.role == "technician" and job.assigned_tech_id != current_user.tech_id:
+        raise HTTPException(status_code=403, detail="Not authorized to attach photos to this job")
+
+    upload_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
+    os.makedirs(upload_dir, exist_ok=True)
+
+    ext = os.path.splitext(file.filename)[1] if file.filename else ".jpg"
+    if not ext:
+        ext = ".jpg"
+    safe_name = f"{job_id}_{uuid.uuid4().hex[:8]}{ext}"
+    dest_path = os.path.join(upload_dir, safe_name)
+
+    with open(dest_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    photo_url = f"/uploads/{safe_name}"
+    current_photos = list(job.photos or [])
+    current_photos.append(photo_url)
+    job.photos = current_photos
+    job.updated_at = datetime.utcnow()
+
+    timeline_entry = models.JobTimeline(
+        job_id=job.id,
+        status=job.status,
+        note=f"Photo attached by {current_user.name} ({current_user.role})"
+    )
+    db.add(timeline_entry)
+    db.commit()
+    db.refresh(job)
+    return job
+
+@router.post("/{job_id}/photos/url", response_model=schemas.JobResponse)
+def add_job_photo_url(
+    job_id: str,
+    data: PhotoUrlRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """Add photo data URL or external link to a job"""
+    job = db.query(models.Job).filter(models.Job.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    current_photos = list(job.photos or [])
+    current_photos.append(data.photo_url)
+    job.photos = current_photos
+    job.updated_at = datetime.utcnow()
+
+    timeline_entry = models.JobTimeline(
+        job_id=job.id,
+        status=job.status,
+        note=f"Photo attached by {current_user.name} ({current_user.role})"
+    )
+    db.add(timeline_entry)
+    db.commit()
+    db.refresh(job)
+    return job

@@ -84,6 +84,7 @@ export function normalizeJob(job) {
     diagnosticFee: job.diagnostic_fee !== undefined ? job.diagnostic_fee : (job.diagnosticFee || 85),
     totalAmount: job.total_amount !== undefined ? job.total_amount : (job.totalAmount || 85),
     paymentStatus: job.payment_status || job.paymentStatus || 'unpaid',
+    photos: job.photos || [],
     createdAt: job.created_at || job.createdAt || new Date().toISOString(),
     updatedAt: job.updated_at || job.updatedAt || new Date().toISOString(),
     timeline: (job.timeline || []).map(t => ({
@@ -125,6 +126,7 @@ export function jobToBackendPayload(jobData) {
     payload.assigned_tech_id = jobData.assignedTechId || jobData.assigned_tech_id || null;
   }
   if (jobData.status !== undefined) payload.status = jobData.status;
+  if (jobData.photos !== undefined) payload.photos = jobData.photos;
   return payload;
 }
 
@@ -257,6 +259,31 @@ export const api = {
       return await request(`/jobs/${jobId}`, {
         method: 'DELETE'
       });
+    },
+
+    async uploadPhoto(jobId, file) {
+      const formData = new FormData();
+      formData.append('file', file);
+      const token = getStoredToken();
+      const res = await fetch(`${API_BASE}/jobs/${jobId}/photos`, {
+        method: 'POST',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        body: formData
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: 'Photo upload failed' }));
+        throw new Error(err.detail || 'Photo upload failed');
+      }
+      const data = await res.json();
+      return normalizeJob(data);
+    },
+
+    async addPhotoUrl(jobId, photoUrl) {
+      const res = await request(`/jobs/${jobId}/photos/url`, {
+        method: 'POST',
+        body: JSON.stringify({ photo_url: photoUrl })
+      });
+      return normalizeJob(res);
     }
   },
 

@@ -4,8 +4,13 @@ import { storage } from '../utils/storage.js';
 import { formatCurrency, formatPhone, formatDate, getStatusBadgeHTML, getUrgencyBadgeHTML } from '../utils/formatters.js';
 
 export function renderTechnicianDashboard() {
-  const activeTechId = storage.getActiveTechId();
+  const isOwner = storage.getRole() === 'owner';
   const technicians = storage.getTechnicians();
+  let activeTechId = storage.getActiveTechId();
+  if (!activeTechId) {
+    const saved = localStorage.getItem('fixflow_owner_testing_tech');
+    activeTechId = saved || (technicians[0] ? technicians[0].id : 'tech_1');
+  }
   const activeTech = storage.getTechnicianById(activeTechId) || technicians[0];
   const allJobs = storage.getJobs();
 
@@ -35,7 +40,15 @@ export function renderTechnicianDashboard() {
               ${activeTech.name}
               <span class="text-amber-400 text-xs font-semibold">★ ${activeTech.rating}</span>
             </h2>
-            <p class="text-xs text-blue-300 font-medium">${activeTech.specialties.join(', ')}</p>
+            <p class="text-xs text-blue-300 font-medium">Licensed Field Service Specialist</p>
+            ${isOwner ? `
+              <div class="mt-1.5 flex items-center gap-1.5">
+                <span class="text-2xs text-amber-300 font-bold bg-amber-500/20 px-1.5 py-0.5 rounded border border-amber-500/30">👑 Testing as:</span>
+                <select id="owner-tech-switcher" class="bg-slate-900 border border-slate-700 text-amber-200 text-xs rounded px-1.5 py-0.5 cursor-pointer">
+                  ${technicians.map(t => `<option value="${t.id}" ${t.id === activeTech.id ? 'selected' : ''}>${t.name}</option>`).join('')}
+                </select>
+              </div>
+            ` : ''}
           </div>
         </div>
 
@@ -147,6 +160,24 @@ function renderTechJobCard(job) {
         ${job.notes ? `<div class="text-2xs text-amber-300 bg-amber-500/10 p-1.5 rounded border border-amber-500/20 mt-1">📝 ${job.notes}</div>` : ''}
       </div>
 
+      <!-- Attached Photos Gallery & Quick Capture -->
+      <div class="border-t border-slate-800/80 pt-2">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-2xs uppercase text-muted font-bold">📸 Photos (${(job.photos || []).length}):</span>
+          <label class="text-2xs text-blue-400 hover:text-blue-300 font-semibold cursor-pointer flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 py-1 px-2 rounded-lg">
+            <span>📷 Add Photo</span>
+            <input type="file" class="hidden btn-tech-job-photo-input" data-job-id="${job.id}" accept="image/*" capture="environment">
+          </label>
+        </div>
+        ${(job.photos && job.photos.length > 0) ? `
+          <div class="flex flex-wrap gap-2">
+            ${job.photos.map(p => `
+              <img src="${p}" alt="Job photo" class="w-12 h-12 object-cover rounded-lg border border-slate-700 hover:border-blue-400 cursor-pointer shadow transition" onclick="window.viewFullPhoto('${p}')">
+            `).join('')}
+          </div>
+        ` : '<p class="text-2xs text-muted italic">No photos attached. Tap "Add Photo" to snap model tag or broken part.</p>'}
+      </div>
+
       <!-- Status Progression Pipeline Controls -->
       <div>
         <p class="text-2xs font-bold uppercase text-muted mb-1 tracking-wider">Update Job Status:</p>
@@ -183,6 +214,13 @@ function renderClaimableJobCard(job) {
       <div>
         <h3 class="text-sm font-bold text-white">${job.brand} ${job.applianceType}</h3>
         <p class="text-xs text-slate-300 mt-1">${job.issueDescription}</p>
+        ${(job.photos && job.photos.length > 0) ? `
+          <div class="flex flex-wrap gap-1.5 mt-2">
+            ${job.photos.map(p => `
+              <img src="${p}" alt="Job photo" class="w-10 h-10 object-cover rounded border border-slate-700 hover:border-amber-400 cursor-pointer" onclick="window.viewFullPhoto('${p}')">
+            `).join('')}
+          </div>
+        ` : ''}
       </div>
 
       <div class="text-xs text-muted bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 space-y-1">
@@ -234,12 +272,49 @@ function attachTechnicianEvents() {
     });
   });
 
+  // Owner Testing Mode: Technician switcher
+  const ownerSwitcher = document.getElementById('owner-tech-switcher');
+  if (ownerSwitcher) {
+    ownerSwitcher.addEventListener('change', (e) => {
+      localStorage.setItem('fixflow_owner_testing_tech', e.target.value);
+      renderTechnicianDashboard();
+    });
+  }
+
+  // Handle Photo Upload on Technician Job Card
+  document.querySelectorAll('.btn-tech-job-photo-input').forEach(input => {
+    input.addEventListener('change', (e) => {
+      const jobId = e.currentTarget.getAttribute('data-job-id');
+      const file = e.currentTarget.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        try {
+          await storage.addPhotoToJob(jobId, ev.target.result);
+          if (window.showToast) window.showToast('Photo uploaded successfully!');
+          renderTechnicianDashboard();
+        } catch (err) {
+          console.error('Failed to attach photo:', err);
+          if (window.showToast) window.showToast('Failed to upload photo', 'error');
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+
   // Claim Job
   document.querySelectorAll('.btn-claim-job').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       const jobId = e.currentTarget.getAttribute('data-job-id');
-      const activeTechId = storage.getActiveTechId();
-      storage.claimJob(jobId, activeTechId);
+      const technicians = storage.getTechnicians();
+      let activeTechId = storage.getActiveTechId();
+      if (!activeTechId) {
+        const saved = localStorage.getItem('fixflow_owner_testing_tech');
+        activeTechId = saved || (technicians[0] ? technicians[0].id : 'tech_1');
+      }
+      await storage.claimJob(jobId, activeTechId);
+      if (window.showToast) window.showToast('Job claimed and accepted!');
+      renderTechnicianDashboard();
     });
   });
 

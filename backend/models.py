@@ -75,6 +75,7 @@ class Job(Base):
     diagnostic_fee = Column(Float, default=85.0)
     total_amount = Column(Float, default=0.0)
     payment_status = Column(String, default="unpaid")  # unpaid, paid_card, paid_cash, invoice_sent
+    photos = Column(JSON, default=list)  # Equipment tags, damage, repair progress, receipts
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
