@@ -119,11 +119,11 @@
               <span class="text-2xs text-slate-400" id="new-job-photo-count">Optional</span>
             </div>
             <div class="flex items-center gap-3">
-              <label class="btn btn-outline text-xs py-2 px-3 border-slate-700 hover:border-blue-500 hover:bg-blue-500/10 text-slate-200 rounded-xl cursor-pointer flex items-center gap-2">
+              <button type="button" id="btn-trigger-new-job-photos" class="btn btn-outline text-xs py-2 px-3.5 border-slate-700 hover:border-blue-500 hover:bg-blue-500/10 text-slate-200 rounded-xl cursor-pointer flex items-center gap-2">
                 <span class="text-base">📷</span>
                 <span>Select / Take Photos</span>
-                <input type="file" id="input-new-job-photos" multiple accept="image/*" class="hidden">
-              </label>
+              </button>
+              <input type="file" id="input-new-job-photos" multiple accept="image/*" style="position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none;">
               <p class="text-2xs text-muted">Upload model serial tag sticker or damage photos.</p>
             </div>
             <div id="new-job-photos-preview-container" class="flex flex-wrap gap-2 mt-2.5"></div>
@@ -139,27 +139,7 @@
               </div>
 
               <div class="form-group mb-0">
-                <label class="form-label">Time Window</label>
-                <select name="scheduledTimeWindow" class="form-control" required>
-                  <option value="8:00 AM - 11:00 AM">8:00 AM - 11:00 AM</option>
-                  <option value="11:00 AM - 2:00 PM">11:00 AM - 2:00 PM</option>
-                  <option value="2:00 PM - 5:00 PM">2:00 PM - 5:00 PM</option>
-                  <option value="Urgent Same-Day">Urgent Same-Day</option>
-                </select>
-              </div>
-
-              <div class="form-group mb-0">
-                <label class="form-label">Priority Urgency</label>
-                <select name="urgency" class="form-control" required>
-                  <option value="Medium">Medium</option>
-                  <option value="Urgent">Urgent (Emergency)</option>
-                  <option value="High">High</option>
-                  <option value="Low">Low</option>
-                </select>
-              </div>
-
-              <div class="form-group mb-0">
-                <label class="form-label">Assign Technician</label>
+                <label class="form-label">Assign Technician (Optional)</label>
                 <select name="assignedTechId" id="modal-assign-tech-select" class="form-control">
                   <option value="">⚡ Available Pool (Unassigned)</option>
                 </select>
@@ -277,27 +257,7 @@
               </div>
 
               <div class="form-group mb-0">
-                <label class="form-label">Time Window</label>
-                <select name="scheduledTimeWindow" id="edit-scheduledTimeWindow" class="form-control" required>
-                  <option value="8:00 AM - 11:00 AM">8:00 AM - 11:00 AM</option>
-                  <option value="11:00 AM - 2:00 PM">11:00 AM - 2:00 PM</option>
-                  <option value="2:00 PM - 5:00 PM">2:00 PM - 5:00 PM</option>
-                  <option value="Urgent Same-Day">Urgent Same-Day</option>
-                </select>
-              </div>
-
-              <div class="form-group mb-0">
-                <label class="form-label">Priority Urgency</label>
-                <select name="urgency" id="edit-urgency" class="form-control" required>
-                  <option value="Medium">Medium</option>
-                  <option value="Urgent">Urgent (Emergency)</option>
-                  <option value="High">High</option>
-                  <option value="Low">Low</option>
-                </select>
-              </div>
-
-              <div class="form-group mb-0">
-                <label class="form-label">Assign Technician</label>
+                <label class="form-label">Assign Technician (Optional)</label>
                 <select name="assignedTechId" id="edit-assignedTechId" class="form-control">
                   <option value="">⚡ Available Pool (Unassigned)</option>
                 </select>

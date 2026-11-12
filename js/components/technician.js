@@ -1,3 +1,4 @@
+import { compressImage } from '../app.js';
 // Field Technician Mobile Component for FixFlow CRM
 
 import { storage } from '../utils/storage.js';
@@ -164,10 +165,10 @@ function renderTechJobCard(job) {
       <div class="border-t border-slate-800/80 pt-2">
         <div class="flex items-center justify-between mb-1.5">
           <span class="text-2xs uppercase text-muted font-bold">📸 Photos (${(job.photos || []).length}):</span>
-          <label class="text-2xs text-blue-400 hover:text-blue-300 font-semibold cursor-pointer flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 py-1 px-2 rounded-lg">
+          <button type="button" class="btn-trigger-tech-photo text-2xs text-blue-400 hover:text-blue-300 font-semibold cursor-pointer flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 py-1 px-2 rounded-lg" data-job-id="${job.id}">
             <span>📷 Add Photo</span>
-            <input type="file" class="hidden btn-tech-job-photo-input" data-job-id="${job.id}" accept="image/*" capture="environment">
-          </label>
+          </button>
+          <input type="file" class="btn-tech-job-photo-input" data-job-id="${job.id}" accept="image/*" capture="environment" style="position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none;">
         </div>
         ${(job.photos && job.photos.length > 0) ? `
           <div class="flex flex-wrap gap-2">
@@ -281,24 +282,33 @@ function attachTechnicianEvents() {
     });
   }
 
-  // Handle Photo Upload on Technician Job Card
+  // Trigger Photo Upload on Technician Job Card
+  document.querySelectorAll('.btn-trigger-tech-photo').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const jobId = e.currentTarget.getAttribute('data-job-id');
+      const input = document.querySelector(`.btn-tech-job-photo-input[data-job-id="${jobId}"]`);
+      if (input) input.click();
+    });
+  });
+
   document.querySelectorAll('.btn-tech-job-photo-input').forEach(input => {
-    input.addEventListener('change', (e) => {
+    input.addEventListener('change', async (e) => {
       const jobId = e.currentTarget.getAttribute('data-job-id');
       const file = e.currentTarget.files[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = async (ev) => {
-        try {
-          await storage.addPhotoToJob(jobId, ev.target.result);
+      if (window.showToast) window.showToast('Processing photo...');
+      try {
+        const compressed = await compressImage(file);
+        if (compressed) {
+          await storage.addPhotoToJob(jobId, compressed);
           if (window.showToast) window.showToast('Photo uploaded successfully!');
           renderTechnicianDashboard();
-        } catch (err) {
-          console.error('Failed to attach photo:', err);
-          if (window.showToast) window.showToast('Failed to upload photo', 'error');
         }
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        console.error('Failed to attach photo:', err);
+        if (window.showToast) window.showToast('Failed to upload photo', 'error');
+      }
     });
   });
 

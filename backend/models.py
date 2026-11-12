@@ -58,10 +58,10 @@ class Job(Base):
     longitude = Column(Float, nullable=True)
 
     appliance_type = Column(String, nullable=False)
-    brand = Column(String, nullable=False)
+    brand = Column(String, default="", nullable=True)
     issue_description = Column(Text, nullable=False)
     scheduled_date = Column(String, nullable=False)  # YYYY-MM-DD
-    scheduled_time_window = Column(String, nullable=False)  # 09:00 AM - 11:00 AM
+    scheduled_time_window = Column(String, default="Anytime", nullable=True)
     urgency = Column(String, default="normal")  # normal, urgent, emergency
     
     # Lifecycle status: draft_ticket -> scheduled -> en_route -> on_site -> in_progress -> parts_ordered -> completed -> canceled

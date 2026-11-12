@@ -84,11 +84,11 @@ class JobCreate(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     appliance_type: str
-    brand: str
+    brand: Optional[str] = ""
     issue_description: str
     scheduled_date: str
-    scheduled_time_window: str
-    urgency: str = "normal"
+    scheduled_time_window: Optional[str] = "Anytime"
+    urgency: Optional[str] = "normal"
     assigned_tech_id: Optional[str] = None
     photos: Optional[List[str]] = []
 

@@ -1,3 +1,42 @@
+// Image compression helper (resizes max dimension to 1200px, converts to JPEG 0.75)
+export function compressImage(file, maxDimension = 1200, quality = 0.75) {
+  return new Promise((resolve) => {
+    if (!file || !file.type || !file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          } else {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => resolve(e.target.result);
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve(null);
+    reader.readAsDataURL(file);
+  });
+}
+
 // Main Application Entry Point & State Router for FixFlow CRM
 
 import { storage } from './utils/storage.js';
@@ -238,25 +277,33 @@ function attachModalGlobalEvents() {
 
   // New Job Photos state & preview handler
   let newJobAttachedPhotos = [];
+  const triggerBtn = document.getElementById('btn-trigger-new-job-photos');
   const newJobPhotoInput = document.getElementById('input-new-job-photos');
   const newJobPhotoPreviewContainer = document.getElementById('new-job-photos-preview-container');
   const newJobPhotoCount = document.getElementById('new-job-photo-count');
+
+  if (triggerBtn && newJobPhotoInput) {
+    triggerBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      newJobPhotoInput.click();
+    });
+  }
 
   function renderNewJobPhotoPreviews() {
     if (!newJobPhotoPreviewContainer) return;
     newJobPhotoPreviewContainer.innerHTML = '';
     if (newJobPhotoCount) {
-      newJobPhotoCount.textContent = newJobAttachedPhotos.length > 0 ? `${newJobAttachedPhotos.length} photo(s) ready` : 'Optional';
+      newJobPhotoCount.textContent = newJobAttachedPhotos.length > 0 ? `✅ ${newJobAttachedPhotos.length} photo(s) attached` : 'Optional';
     }
     newJobAttachedPhotos.forEach((dataUrl, idx) => {
       const wrap = document.createElement('div');
       wrap.className = 'relative group';
       wrap.innerHTML = `
-        <img src="${dataUrl}" class="w-14 h-14 object-cover rounded-lg border border-slate-700 shadow" alt="Preview">
-        <button type="button" class="absolute -top-1.5 -right-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-2xs cursor-pointer shadow" data-remove-idx="${idx}">✕</button>
+        <img src="${dataUrl}" class="w-16 h-16 object-cover rounded-xl border-2 border-emerald-500/60 shadow-lg cursor-pointer" alt="Preview" onclick="window.viewFullPhoto('${dataUrl}')">
+        <button type="button" class="absolute -top-1.5 -right-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold cursor-pointer shadow">✕</button>
       `;
       wrap.querySelector('button').addEventListener('click', (ev) => {
-        ev.preventDefault();
+        ev.stopPropagation();
         newJobAttachedPhotos.splice(idx, 1);
         renderNewJobPhotoPreviews();
       });
@@ -265,16 +312,17 @@ function attachModalGlobalEvents() {
   }
 
   if (newJobPhotoInput) {
-    newJobPhotoInput.addEventListener('change', (e) => {
+    newJobPhotoInput.addEventListener('change', async (e) => {
       const files = Array.from(e.target.files || []);
-      files.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          newJobAttachedPhotos.push(ev.target.result);
-          renderNewJobPhotoPreviews();
-        };
-        reader.readAsDataURL(file);
-      });
+      if (!files.length) return;
+      if (newJobPhotoCount) newJobPhotoCount.textContent = 'Processing photo(s)...';
+      for (const file of files) {
+        const compressed = await compressImage(file);
+        if (compressed) {
+          newJobAttachedPhotos.push(compressed);
+        }
+      }
+      renderNewJobPhotoPreviews();
       newJobPhotoInput.value = '';
     });
   }
@@ -301,8 +349,8 @@ function attachModalGlobalEvents() {
           brand: formData.get('brand') || '',
           issueDescription: formData.get('issueDescription'),
           scheduledDate: formData.get('scheduledDate'),
-          scheduledTimeWindow: formData.get('scheduledTimeWindow'),
-          urgency: formData.get('urgency'),
+          scheduledTimeWindow: formData.get('scheduledTimeWindow') || 'Anytime',
+          urgency: formData.get('urgency') || 'Normal',
           assignedTechId: formData.get('assignedTechId') || null,
           photos: [...newJobAttachedPhotos]
         };
@@ -336,8 +384,8 @@ function attachModalGlobalEvents() {
         brand: formData.get('brand'),
         issueDescription: formData.get('issueDescription'),
         scheduledDate: formData.get('scheduledDate'),
-        scheduledTimeWindow: formData.get('scheduledTimeWindow'),
-        urgency: formData.get('urgency'),
+        scheduledTimeWindow: formData.get('scheduledTimeWindow') || 'Anytime',
+        urgency: formData.get('urgency') || 'Normal',
         assignedTechId: formData.get('assignedTechId') || null
       };
 
@@ -519,10 +567,10 @@ window.openJobDetailModal = function(jobId) {
       <div class="border-t border-slate-800 pt-2">
         <div class="flex items-center justify-between mb-1.5">
           <span class="text-muted text-2xs uppercase font-bold">📸 Photos (${(job.photos || []).length})</span>
-          <label class="text-2xs text-blue-400 hover:text-blue-300 font-semibold cursor-pointer flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 py-1 px-2.5 rounded-lg">
+          <button type="button" id="btn-trigger-detail-photo" class="text-2xs text-blue-400 hover:text-blue-300 font-semibold cursor-pointer flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 py-1 px-2.5 rounded-lg">
             <span>📷 + Upload Photo</span>
-            <input type="file" class="hidden" id="detail-job-photo-upload" accept="image/*" multiple>
-          </label>
+          </button>
+          <input type="file" id="detail-job-photo-upload" accept="image/*" multiple style="position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none;">
         </div>
         <div class="flex flex-wrap gap-2">
           ${(job.photos && job.photos.length > 0) ? job.photos.map(p => `
@@ -572,25 +620,25 @@ window.openJobDetailModal = function(jobId) {
   }
 
   // Ticket Detail Photo Upload Listener
+  const detailTriggerBtn = document.getElementById('btn-trigger-detail-photo');
   const detailPhotoInput = document.getElementById('detail-job-photo-upload');
-  if (detailPhotoInput) {
-    detailPhotoInput.addEventListener('change', (e) => {
+  if (detailTriggerBtn && detailPhotoInput) {
+    detailTriggerBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      detailPhotoInput.click();
+    });
+    detailPhotoInput.addEventListener('change', async (e) => {
       const files = Array.from(e.target.files || []);
       if (!files.length) return;
-      files.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = async (ev) => {
-          try {
-            await storage.addPhotoToJob(jobId, ev.target.result);
-            showToast('Photo added to ticket!');
-            window.openJobDetailModal(jobId);
-          } catch (err) {
-            console.error('Failed to attach photo:', err);
-            showToast('Failed to attach photo', 'error');
-          }
-        };
-        reader.readAsDataURL(file);
-      });
+      showToast('Processing photo...');
+      for (const file of files) {
+        const compressed = await compressImage(file);
+        if (compressed) {
+          await storage.addPhotoToJob(jobId, compressed);
+        }
+      }
+      showToast('Photo added to ticket!');
+      window.openJobDetailModal(jobId);
     });
   }
 
@@ -636,8 +684,6 @@ window.openEditJobModal = function(jobId) {
   document.getElementById('edit-brand').value = job.brand || 'Whirlpool';
   document.getElementById('edit-issueDescription').value = job.issueDescription || '';
   document.getElementById('edit-scheduledDate').value = job.scheduledDate || '';
-  document.getElementById('edit-scheduledTimeWindow').value = job.scheduledTimeWindow || '8:00 AM - 11:00 AM';
-  document.getElementById('edit-urgency').value = job.urgency || 'Medium';
   document.getElementById('edit-assignedTechId').value = job.assignedTechId || '';
 
   document.getElementById('modal-edit-job').classList.add('open');
