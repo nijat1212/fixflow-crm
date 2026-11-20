@@ -244,8 +244,8 @@ function renderTimelineMatrix({ weekDays, technicians, shifts, jobs, effectiveTe
       const startH = Math.max(START_HOUR, timeInfo.startHour);
       const duration = Math.max(1, timeInfo.duration);
 
-      const topPx = (startH - START_HOUR) * SLOT_HEIGHT + 3;
-      const heightPx = duration * SLOT_HEIGHT - 6;
+      const topPx = Math.round((startH - START_HOUR) * SLOT_HEIGHT) + 2;
+      const heightPx = Math.round(duration * SLOT_HEIGHT) - 4;
 
       // Color theme: dynamically reflects job lifecycle status
       const statusKey = (job.status || 'scheduled').toLowerCase();
@@ -594,22 +594,48 @@ function formatTimeRangeBadge(tw) {
 
 function parseTimeWindow(timeWindow) {
   if (!timeWindow) return { startHour: 8, duration: 2 };
+  if (/urgent/i.test(timeWindow)) return { startHour: 9, duration: 2 };
+  if (/anytime|all day/i.test(timeWindow)) return { startHour: 8, duration: 2 };
+
   const parts = timeWindow.split('-').map(s => s.trim());
   if (parts.length < 2) return { startHour: 8, duration: 2 };
 
-  function toHour(str) {
-    const m = str.match(/(\d+):?(\d+)?\s*(AM|PM)?/i);
-    if (!m) return 8;
+  function parsePart(str, fallbackPeriod = '') {
+    const m = str.match(/(\d+)(?::(\d+))?\s*(AM|PM)?/i);
+    if (!m) return { rawH: 8, min: 0, period: fallbackPeriod };
     let h = parseInt(m[1], 10);
     const min = m[2] ? parseInt(m[2], 10) : 0;
-    const period = (m[3] || '').toUpperCase();
-    if (period === 'PM' && h < 12) h += 12;
-    if (period === 'AM' && h === 12) h = 0;
-    return h + (min >= 30 ? 0.5 : 0);
+    let period = (m[3] || fallbackPeriod || '').toUpperCase();
+    return { rawH: h, min, period };
   }
 
-  const start = toHour(parts[0]);
-  const end = toHour(parts[1]);
-  const duration = Math.max(1, end - start);
+  const p2Match = parts[1].match(/(AM|PM)/i);
+  const commonPeriod = p2Match ? p2Match[1].toUpperCase() : '';
+
+  const p1 = parsePart(parts[0], commonPeriod);
+  const p2 = parsePart(parts[1], commonPeriod);
+
+  function finalizeHour(p) {
+    let h = p.rawH;
+    if (p.period === 'PM' && h < 12) h += 12;
+    if (p.period === 'AM' && h === 12) h = 0;
+    return h + (p.min >= 30 ? 0.5 : 0);
+  }
+
+  let start = finalizeHour(p1);
+  let end = finalizeHour(p2);
+
+  if (start > end && p1.period === 'AM') {
+    end += 12;
+  }
+
+  let duration = end - start;
+  if (isNaN(duration) || duration <= 0) {
+    duration = 2;
+  } else if (duration > 2.5) {
+    // Standard service window: clamp legacy 3h/4h slots to 2h so cards don't blow out calendar bounds
+    duration = 2;
+  }
+
   return { startHour: start, duration };
 }
