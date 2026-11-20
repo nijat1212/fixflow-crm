@@ -105,11 +105,10 @@ export function renderDispatcherDashboard() {
           <table class="w-full text-left border-collapse text-xs">
             <thead>
               <tr class="border-b border-slate-700 text-muted uppercase text-2xs tracking-wider">
-                <th class="py-2.5 px-3">Job ID</th>
                 <th class="py-2.5 px-3">Customer</th>
                 <th class="py-2.5 px-3">Location & Zip</th>
                 <th class="py-2.5 px-3">Appliance</th>
-                <th class="py-2.5 px-3">Urgency</th>
+                <th class="py-2.5 px-3">Scheduled (2h)</th>
                 <th class="py-2.5 px-3">Assigned Tech</th>
                 <th class="py-2.5 px-3">Status</th>
                 <th class="py-2.5 px-3 text-right">Actions</th>
@@ -140,12 +139,10 @@ function renderAvailableJobCard(job, technicians) {
       
       <div>
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-bold text-amber-400">${job.id}</span>
-          ${getUrgencyBadgeHTML(job.urgency)}
+          <h4 class="font-bold text-white text-sm">${job.applianceType || 'Appliance'}</h4>
+          <span class="text-2xs text-blue-400 font-semibold bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">🕒 ${job.scheduledTimeWindow || '2 Hours'}</span>
         </div>
-        
-        <h4 class="font-bold text-white text-sm mb-1">${job.brand} ${job.applianceType}</h4>
-        <p class="text-xs text-slate-300 mb-2 line-clamp-2">${job.issueDescription}</p>
+        <p class="text-xs text-slate-300 mb-2 line-clamp-2">${job.issueDescription || ''}</p>
 
         <div class="text-2xs text-muted space-y-1 mb-3 bg-slate-950/50 p-2.5 rounded-lg border border-slate-800">
           <div class="flex items-center justify-between">
@@ -180,20 +177,21 @@ function renderJobTableRow(job, technicians) {
   const tech = technicians.find(t => t.id === job.assignedTechId);
   return `
     <tr class="hover:bg-slate-800/40 transition-colors job-table-row status-${(job.status || 'scheduled').toLowerCase()}">
-      <td class="py-3 px-3 font-mono font-bold text-blue-400">${job.id}</td>
       <td class="py-3 px-3">
         <div class="font-semibold text-white">${job.customerName}</div>
         <div class="text-muted text-2xs">${job.phone ? `<a href="tel:${job.phone}" class="text-blue-400 hover:underline">📞 ${formatPhone(job.phone)}</a>` : ''}</div>
       </td>
       <td class="py-3 px-3">
-        <div>${job.city}, TX</div>
-        <div class="text-muted text-2xs font-mono">Zip: ${job.zipCode}</div>
+        <div>${job.city || 'Austin'}, TX</div>
+        <div class="text-muted text-2xs font-mono">${job.zipCode ? 'Zip: ' + job.zipCode : ''}</div>
       </td>
       <td class="py-3 px-3">
-        <div class="font-medium text-slate-200">${job.applianceType}</div>
-        <div class="text-muted text-2xs">${job.brand}</div>
+        <div class="font-medium text-slate-200">${job.applianceType || 'Appliance'}</div>
       </td>
-      <td class="py-3 px-3">${getUrgencyBadgeHTML(job.urgency)}</td>
+      <td class="py-3 px-3">
+        <div class="text-xs text-slate-200 font-medium">${formatDate(job.scheduledDate)}</div>
+        <div class="text-2xs text-blue-400 font-semibold">${job.scheduledTimeWindow || '2 Hours'}</div>
+      </td>
       <td class="py-3 px-3">
         ${tech ? `
           <span class="inline-flex items-center gap-1 text-xs font-semibold text-slate-200">
