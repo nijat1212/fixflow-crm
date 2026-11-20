@@ -27,6 +27,25 @@
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
 }
 
+/* Photo Viewer Lightbox */
+#modal-photo-viewer {
+  z-index: 1050 !important;
+}
+
+#btn-photo-prev, #btn-photo-next {
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#btn-photo-prev:hover, #btn-photo-next:hover {
+  background-color: rgba(30, 41, 59, 0.95);
+  transform: translateY(-50%) scale(1.05);
+}
+
+#btn-photo-prev:active, #btn-photo-next:active {
+  transform: translateY(-50%) scale(0.92);
+}
+
 /* Modals */
 .modal-backdrop {
   position: fixed;

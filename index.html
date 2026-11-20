@@ -475,16 +475,36 @@
   </div>
 
   
-  <!-- MODAL: Fullscreen High-Res Photo Lightbox -->
-  <div id="modal-photo-viewer" class="modal-backdrop">
-    <div class="relative max-w-3xl w-full mx-4 p-3 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl flex flex-col items-center">
-      <div class="w-full flex items-center justify-between pb-2 border-b border-slate-800 mb-2">
-        <span class="text-xs font-bold text-slate-300">📸 FixFlow Photo Viewer</span>
-        <button type="button" class="btn-close-modal text-slate-400 hover:text-white text-xl cursor-pointer px-2">✕</button>
+  <!-- MODAL: Fullscreen High-Res Photo Lightbox & Multi-Photo Carousel -->
+  <div id="modal-photo-viewer" class="modal-backdrop" style="z-index: 1050;">
+    <div class="relative max-w-4xl w-full mx-3 p-3 bg-slate-950/95 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl flex flex-col items-center">
+      <!-- Header -->
+      <div class="w-full flex items-center justify-between pb-2.5 border-b border-slate-800 mb-2">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-slate-200">📸 Job Photo Gallery</span>
+          <span id="modal-photo-viewer-counter" class="text-2xs font-mono font-semibold bg-slate-800 text-blue-400 px-2 py-0.5 rounded-full border border-slate-700">1 / 1</span>
+        </div>
+        <button type="button" class="btn-close-photo-modal text-slate-400 hover:text-white text-2xl font-bold cursor-pointer p-1 leading-none bg-transparent border-0" title="Close">✕</button>
       </div>
-      <div class="p-2 w-full flex items-center justify-center max-h-[80vh] overflow-hidden">
-        <img id="modal-photo-viewer-img" src="" alt="Job photo" class="max-w-full max-h-[75vh] object-contain rounded-xl shadow-lg border border-slate-800">
+
+      <!-- Main Viewport with Prev / Next Navigation -->
+      <div class="relative w-full flex items-center justify-center min-h-[45vh] max-h-[72vh] overflow-hidden select-none">
+        <!-- Prev Button -->
+        <button type="button" id="btn-photo-prev" class="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-slate-900/85 hover:bg-slate-800 text-white flex items-center justify-center text-xl font-bold border border-slate-700 shadow-2xl cursor-pointer transition active:scale-95" title="Previous Photo">
+          ❮
+        </button>
+
+        <!-- Main Photo -->
+        <img id="modal-photo-viewer-img" src="" alt="Job photo" class="max-w-full max-h-[68vh] object-contain rounded-xl shadow-2xl transition duration-150">
+
+        <!-- Next Button -->
+        <button type="button" id="btn-photo-next" class="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-slate-900/85 hover:bg-slate-800 text-white flex items-center justify-center text-xl font-bold border border-slate-700 shadow-2xl cursor-pointer transition active:scale-95" title="Next Photo">
+          ❯
+        </button>
       </div>
+
+      <!-- Thumbnails Strip -->
+      <div id="modal-photo-viewer-thumbnails" class="flex items-center justify-center gap-2 mt-2 pt-2 border-t border-slate-800/80 w-full overflow-x-auto py-1"></div>
     </div>
   </div>
 

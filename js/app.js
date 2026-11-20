@@ -290,9 +290,87 @@ function attachModalGlobalEvents() {
   document.querySelectorAll('.btn-close-modal, .modal-backdrop').forEach(el => {
     el.addEventListener('click', (e) => {
       if (e.target === el || e.target.classList.contains('btn-close-modal')) {
+        const photoModal = document.getElementById('modal-photo-viewer');
+        if (photoModal && (e.target === photoModal || e.target.closest('#modal-photo-viewer'))) {
+          photoModal.classList.remove('open');
+          return;
+        }
         document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('open'));
       }
     });
+  });
+
+  // Photo viewer specific close button
+  document.querySelectorAll('.btn-close-photo-modal').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const photoModal = document.getElementById('modal-photo-viewer');
+      if (photoModal) photoModal.classList.remove('open');
+    });
+  });
+
+  // Prev & Next buttons for Photo Viewer
+  const prevPhotoBtn = document.getElementById('btn-photo-prev');
+  const nextPhotoBtn = document.getElementById('btn-photo-next');
+  if (prevPhotoBtn) {
+    prevPhotoBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (currentGalleryPhotos.length > 1) {
+        currentGalleryIndex = (currentGalleryIndex - 1 + currentGalleryPhotos.length) % currentGalleryPhotos.length;
+        updatePhotoViewerDisplay();
+      }
+    });
+  }
+  if (nextPhotoBtn) {
+    nextPhotoBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (currentGalleryPhotos.length > 1) {
+        currentGalleryIndex = (currentGalleryIndex + 1) % currentGalleryPhotos.length;
+        updatePhotoViewerDisplay();
+      }
+    });
+  }
+
+  // Touch swipe gestures for mobile photo gallery
+  const photoModalEl = document.getElementById('modal-photo-viewer');
+  if (photoModalEl) {
+    let touchStartX = 0;
+    photoModalEl.addEventListener('touchstart', (e) => {
+      if (e.changedTouches && e.changedTouches[0]) {
+        touchStartX = e.changedTouches[0].screenX;
+      }
+    }, { passive: true });
+
+    photoModalEl.addEventListener('touchend', (e) => {
+      if (e.changedTouches && e.changedTouches[0]) {
+        const touchEndX = e.changedTouches[0].screenX;
+        const diffX = touchEndX - touchStartX;
+        if (Math.abs(diffX) > 40 && currentGalleryPhotos.length > 1) {
+          if (diffX < 0) {
+            currentGalleryIndex = (currentGalleryIndex + 1) % currentGalleryPhotos.length;
+          } else {
+            currentGalleryIndex = (currentGalleryIndex - 1 + currentGalleryPhotos.length) % currentGalleryPhotos.length;
+          }
+          updatePhotoViewerDisplay();
+        }
+      }
+    }, { passive: true });
+  }
+
+  // Keyboard navigation (ArrowLeft / ArrowRight / Escape)
+  window.addEventListener('keydown', (e) => {
+    const photoModal = document.getElementById('modal-photo-viewer');
+    if (photoModal && photoModal.classList.contains('open')) {
+      if (e.key === 'ArrowLeft' && currentGalleryPhotos.length > 1) {
+        currentGalleryIndex = (currentGalleryIndex - 1 + currentGalleryPhotos.length) % currentGalleryPhotos.length;
+        updatePhotoViewerDisplay();
+      } else if (e.key === 'ArrowRight' && currentGalleryPhotos.length > 1) {
+        currentGalleryIndex = (currentGalleryIndex + 1) % currentGalleryPhotos.length;
+        updatePhotoViewerDisplay();
+      } else if (e.key === 'Escape') {
+        photoModal.classList.remove('open');
+      }
+    }
   });
 
   // New Job Photos state & preview handler
@@ -541,6 +619,91 @@ function attachModalGlobalEvents() {
   }
 }
 
+// High-Res Photo Gallery & Carousel State
+let currentGalleryPhotos = [];
+let currentGalleryIndex = 0;
+
+function updatePhotoViewerDisplay() {
+  const modal = document.getElementById('modal-photo-viewer');
+  const img = document.getElementById('modal-photo-viewer-img');
+  const counter = document.getElementById('modal-photo-viewer-counter');
+  const prevBtn = document.getElementById('btn-photo-prev');
+  const nextBtn = document.getElementById('btn-photo-next');
+  const thumbsContainer = document.getElementById('modal-photo-viewer-thumbnails');
+
+  if (!modal || !img || !currentGalleryPhotos.length) return;
+
+  const total = currentGalleryPhotos.length;
+  currentGalleryIndex = (currentGalleryIndex + total) % total;
+
+  img.src = currentGalleryPhotos[currentGalleryIndex];
+
+  if (counter) {
+    counter.textContent = `${currentGalleryIndex + 1} / ${total}`;
+  }
+
+  // Toggle prev/next button visibility
+  if (prevBtn) prevBtn.style.display = total > 1 ? 'flex' : 'none';
+  if (nextBtn) nextBtn.style.display = total > 1 ? 'flex' : 'none';
+
+  // Render Thumbnails bar
+  if (thumbsContainer) {
+    if (total > 1) {
+      thumbsContainer.style.display = 'flex';
+      thumbsContainer.innerHTML = currentGalleryPhotos.map((p, idx) => `
+        <img src="${p}" alt="Thumb" class="w-12 h-12 object-cover rounded-lg border-2 cursor-pointer transition ${idx === currentGalleryIndex ? 'border-blue-500 scale-105 shadow-md shadow-blue-500/30' : 'border-slate-700 opacity-60 hover:opacity-100'}" data-thumb-idx="${idx}">
+      `).join('');
+
+      thumbsContainer.querySelectorAll('img[data-thumb-idx]').forEach(t => {
+        t.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const idx = parseInt(e.currentTarget.getAttribute('data-thumb-idx'), 10);
+          currentGalleryIndex = idx;
+          updatePhotoViewerDisplay();
+        });
+      });
+    } else {
+      thumbsContainer.style.display = 'none';
+      thumbsContainer.innerHTML = '';
+    }
+  }
+}
+
+window.viewFullPhoto = function(target, photoIndex = 0) {
+  currentGalleryPhotos = [];
+  currentGalleryIndex = typeof photoIndex === 'number' ? photoIndex : 0;
+
+  if (typeof target === 'string') {
+    // If target is a jobId (or job exists with this id)
+    const job = storage.getJobById(target);
+    if (job && job.photos && job.photos.length > 0) {
+      currentGalleryPhotos = [...job.photos];
+    } else {
+      // Target might be an image URL - look up the job that contains it
+      const allJobs = storage.getJobs();
+      const ownerJob = allJobs.find(j => (j.photos || []).includes(target));
+      if (ownerJob && ownerJob.photos && ownerJob.photos.length > 0) {
+        currentGalleryPhotos = [...ownerJob.photos];
+        const foundIdx = currentGalleryPhotos.indexOf(target);
+        if (foundIdx !== -1) currentGalleryIndex = foundIdx;
+      } else {
+        currentGalleryPhotos = [target];
+        currentGalleryIndex = 0;
+      }
+    }
+  } else if (Array.isArray(target)) {
+    currentGalleryPhotos = [...target];
+  }
+
+  if (!currentGalleryPhotos.length) return;
+
+  const modal = document.getElementById('modal-photo-viewer');
+  if (modal) {
+    updatePhotoViewerDisplay();
+    modal.classList.add('open');
+  }
+};
+
 // Global modal triggers bound to window
 window.openJobDetailModal = function(jobId) {
   const job = storage.getJobById(jobId);
@@ -593,8 +756,8 @@ window.openJobDetailModal = function(jobId) {
           <input type="file" id="detail-job-photo-upload" accept="image/*" multiple style="position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none;">
         </div>
         <div class="flex flex-wrap gap-2">
-          ${(job.photos && job.photos.length > 0) ? job.photos.map(p => `
-            <img src="${p}" alt="Job photo" class="w-16 h-16 object-cover rounded-lg border border-slate-700 hover:border-blue-400 cursor-pointer shadow transition" onclick="window.viewFullPhoto('${p}')">
+          ${(job.photos && job.photos.length > 0) ? job.photos.map((p, idx) => `
+            <img src="${p}" alt="Job photo" class="w-16 h-16 object-cover rounded-lg border border-slate-700 hover:border-blue-400 cursor-pointer shadow transition active:scale-95" onclick="window.viewFullPhoto('${job.id}', ${idx})">
           `).join('') : '<p class="text-2xs text-muted italic">No photos attached yet. Tap "+ Upload Photo" to add equipment stickers or damage photos.</p>'}
         </div>
       </div>

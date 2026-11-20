@@ -172,8 +172,8 @@ function renderTechJobCard(job) {
         </div>
         ${(job.photos && job.photos.length > 0) ? `
           <div class="flex flex-wrap gap-2">
-            ${job.photos.map(p => `
-              <img src="${p}" alt="Job photo" class="w-12 h-12 object-cover rounded-lg border border-slate-700 hover:border-blue-400 cursor-pointer shadow transition" onclick="window.viewFullPhoto('${p}')">
+            ${job.photos.map((p, idx) => `
+              <img src="${p}" alt="Job photo" class="w-12 h-12 object-cover rounded-lg border border-slate-700 hover:border-blue-400 cursor-pointer shadow transition active:scale-95" onclick="window.viewFullPhoto('${job.id}', ${idx})">
             `).join('')}
           </div>
         ` : '<p class="text-2xs text-muted italic">No photos attached. Tap "Add Photo" to snap model tag or broken part.</p>'}
@@ -217,8 +217,8 @@ function renderClaimableJobCard(job) {
         <p class="text-xs text-slate-300 mt-1">${job.issueDescription}</p>
         ${(job.photos && job.photos.length > 0) ? `
           <div class="flex flex-wrap gap-1.5 mt-2">
-            ${job.photos.map(p => `
-              <img src="${p}" alt="Job photo" class="w-10 h-10 object-cover rounded border border-slate-700 hover:border-amber-400 cursor-pointer" onclick="window.viewFullPhoto('${p}')">
+            ${job.photos.map((p, idx) => `
+              <img src="${p}" alt="Job photo" class="w-10 h-10 object-cover rounded border border-slate-700 hover:border-amber-400 cursor-pointer active:scale-95" onclick="window.viewFullPhoto('${job.id}', ${idx})">
             `).join('')}
           </div>
         ` : ''}
