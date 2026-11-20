@@ -73,6 +73,26 @@ function initApp() {
 
   // Background sync from FastAPI server (Google Cloud)
   storage.syncFromServer();
+
+  // Periodic automatic sync every 15 seconds so new tickets appear without manual reload
+  setInterval(() => {
+    if (storage.getSession()) {
+      storage.syncFromServer();
+    }
+  }, 15000);
+
+  // Sync immediately when user refocuses the app/tab
+  window.addEventListener('focus', () => {
+    if (storage.getSession()) {
+      storage.syncFromServer();
+    }
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && storage.getSession()) {
+      storage.syncFromServer();
+    }
+  });
 }
 
 function renderApp() {

@@ -266,7 +266,8 @@ function renderTimelineMatrix({ weekDays, technicians, shifts, jobs, effectiveTe
       const bgStyle = statusBgMap[statusKey] || 'background: linear-gradient(135deg, #1d4ed8, #2563eb); border: 1px solid #60a5fa;';
 
       const shortCust = formatShortCustomer(job.customerName);
-      const shortAppliance = APPLIANCE_ABBR[job.applianceType] || (job.applianceType ? job.applianceType.slice(0, 4) : 'App');
+      const shortAppliance = APPLIANCE_ABBR[job.applianceType] || (job.applianceType ? job.applianceType.slice(0, 5) : 'App');
+      const timeBadge = formatTimeRangeBadge(job.scheduledTimeWindow);
 
       return `
         <div class="timeline-job-block"
@@ -274,14 +275,14 @@ function renderTimelineMatrix({ weekDays, technicians, shifts, jobs, effectiveTe
              style="top: ${topPx}px; height: ${heightPx}px; left: 1px; right: 1px; ${bgStyle}"
              title="${job.customerName} - ${job.applianceType} (${job.scheduledTimeWindow})">
           
-          <div class="font-extrabold text-2xs leading-tight truncate">
+          <div class="text-3xs font-mono font-bold leading-none opacity-95 pb-0.5 border-b border-white/20 truncate">
+            🕒 ${timeBadge}
+          </div>
+          <div class="font-extrabold text-2xs leading-tight truncate mt-0.5">
             ${shortCust}
           </div>
-          <div class="text-3xs opacity-90 truncate leading-tight">
+          <div class="text-3xs opacity-85 truncate leading-tight">
             ${shortAppliance}
-          </div>
-          <div class="text-3xs opacity-75 truncate mt-auto font-mono">
-            ${job.scheduledTimeWindow ? job.scheduledTimeWindow.split(' ')[0] : ''}
           </div>
         </div>
       `;
@@ -303,8 +304,10 @@ function renderTimelineMatrix({ weekDays, technicians, shifts, jobs, effectiveTe
       `;
     }
 
+    const isSelected = colIndex === calendarState.selectedDayIndex;
+
     return `
-      <div class="timeline-day-col ${isToday ? 'is-today-col' : ''}" data-col-index="${colIndex}">
+      <div class="timeline-day-col ${isToday ? 'is-today-col' : ''} ${isSelected ? 'is-selected-col' : ''}" data-col-index="${colIndex}">
         ${slotCellsHTML}
         ${jobBlocksHTML}
         ${timeLineHTML}
@@ -574,6 +577,19 @@ function formatShortCustomer(fullName) {
   const parts = fullName.trim().split(' ');
   if (parts.length === 1) return parts[0];
   return `${parts[0]} ${parts[parts.length - 1].charAt(0)}.`;
+}
+
+function formatTimeRangeBadge(tw) {
+  if (!tw) return '2h';
+  if (/urgent/i.test(tw)) return '⚡ Urgent';
+  if (/anytime|all day/i.test(tw)) return 'All Day';
+  const parts = tw.split('-').map(s => s.trim());
+  if (parts.length === 2) {
+    const p1 = parts[0].replace(':00', '').trim();
+    const p2 = parts[1].replace(':00', '').trim();
+    return `${p1} - ${p2}`;
+  }
+  return tw;
 }
 
 function parseTimeWindow(timeWindow) {
