@@ -105,13 +105,9 @@ export function renderDispatcherDashboard() {
           <table class="w-full text-left border-collapse text-xs">
             <thead>
               <tr class="border-b border-slate-700 text-muted uppercase text-2xs tracking-wider">
-                <th class="py-2.5 px-3">Customer</th>
-                <th class="py-2.5 px-3">Location & Zip</th>
-                <th class="py-2.5 px-3">Appliance</th>
-                <th class="py-2.5 px-3">Scheduled (2h)</th>
-                <th class="py-2.5 px-3">Assigned Tech</th>
-                <th class="py-2.5 px-3">Status</th>
-                <th class="py-2.5 px-3 text-right">Actions</th>
+                <th class="py-2.5 px-3">Customer & Location</th>
+                <th class="py-2.5 px-2.5">Date & Tech</th>
+                <th class="py-2.5 px-2.5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody id="dispatcher-jobs-tbody" class="divide-y divide-slate-800 text-slate-300">
@@ -175,34 +171,49 @@ function renderAvailableJobCard(job, technicians) {
 
 function renderJobTableRow(job, technicians) {
   const tech = technicians.find(t => t.id === job.assignedTechId);
+  const statusKey = (job.status || 'scheduled').toLowerCase();
+  const statusConfig = {
+    'completed': { label: 'Completed', color: '#10b981', bg: 'rgba(16, 185, 129, 0.15)' },
+    'scheduled': { label: 'Scheduled', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.15)' },
+    'assigned': { label: 'Assigned', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.15)' },
+    'accepted': { label: 'Accepted', color: '#0284c7', bg: 'rgba(2, 132, 199, 0.15)' },
+    'en_route': { label: 'En Route', color: '#818cf8', bg: 'rgba(99, 102, 241, 0.15)' },
+    'in_route': { label: 'En Route', color: '#818cf8', bg: 'rgba(99, 102, 241, 0.15)' },
+    'in_progress': { label: 'In Progress', color: '#a78bfa', bg: 'rgba(139, 92, 246, 0.15)' },
+    'on_site': { label: 'On Site', color: '#a78bfa', bg: 'rgba(139, 92, 246, 0.15)' },
+    'parts_needed': { label: 'Parts Needed', color: '#fb923c', bg: 'rgba(249, 115, 22, 0.15)' },
+    'waiting_for_parts': { label: 'Waiting Parts', color: '#fb923c', bg: 'rgba(249, 115, 22, 0.15)' },
+    'available': { label: 'Unassigned', color: '#fbbf24', bg: 'rgba(245, 158, 11, 0.15)' },
+    'draft_ticket': { label: 'Unassigned', color: '#fbbf24', bg: 'rgba(245, 158, 11, 0.15)' }
+  };
+  const st = statusConfig[statusKey] || statusConfig['scheduled'];
+
   return `
-    <tr class="hover:bg-slate-800/40 transition-colors job-table-row status-${(job.status || 'scheduled').toLowerCase()}">
-      <td class="py-3 px-3">
-        <div class="font-semibold text-white">${job.customerName}</div>
-        <div class="text-muted text-2xs">${job.phone ? `<a href="tel:${job.phone}" class="text-blue-400 hover:underline">📞 ${formatPhone(job.phone)}</a>` : ''}</div>
+    <tr class="hover:bg-slate-800/40 transition-colors job-table-row status-${statusKey}">
+      <td class="py-2.5 px-3">
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <span class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${st.color};"></span>
+          <span class="font-bold text-white text-xs">${job.customerName}</span>
+          <span class="text-3xs font-semibold px-1.5 py-0.5 rounded" style="color: ${st.color}; background-color: ${st.bg};">${st.label}</span>
+        </div>
+        <div class="text-muted text-2xs mt-0.5 flex items-center gap-2 flex-wrap">
+          ${job.phone ? `<a href="tel:${job.phone}" class="text-blue-400 hover:underline font-medium">📞 ${formatPhone(job.phone)}</a>` : ''}
+          <span class="text-slate-400 font-mono text-3xs">${job.city || 'Austin'}, TX ${job.zipCode || ''}</span>
+        </div>
       </td>
-      <td class="py-3 px-3">
-        <div>${job.city || 'Austin'}, TX</div>
-        <div class="text-muted text-2xs font-mono">${job.zipCode ? 'Zip: ' + job.zipCode : ''}</div>
+      <td class="py-2.5 px-2.5 whitespace-nowrap">
+        <div class="text-xs text-slate-200 font-medium">📅 ${formatDate(job.scheduledDate)}</div>
+        <div class="mt-0.5">
+          ${tech ? `
+            <span class="inline-flex items-center gap-1 text-2xs font-semibold text-slate-300">
+              <span class="w-1.5 h-1.5 rounded-full inline-block" style="background-color: ${tech.color}"></span>
+              ${tech.name}
+            </span>
+          ` : `<span class="text-amber-400 font-semibold text-3xs bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">Unassigned</span>`}
+        </div>
       </td>
-      <td class="py-3 px-3">
-        <div class="font-medium text-slate-200">${job.applianceType || 'Appliance'}</div>
-      </td>
-      <td class="py-3 px-3">
-        <div class="text-xs text-slate-200 font-medium">${formatDate(job.scheduledDate)}</div>
-        <div class="text-2xs text-blue-400 font-semibold">${job.scheduledTimeWindow || '2 Hours'}</div>
-      </td>
-      <td class="py-3 px-3">
-        ${tech ? `
-          <span class="inline-flex items-center gap-1 text-xs font-semibold text-slate-200">
-            <span class="w-2 h-2 rounded-full inline-block" style="background-color: ${tech.color}"></span>
-            ${tech.name}
-          </span>
-        ` : `<span class="text-amber-400 font-semibold text-2xs">Unassigned</span>`}
-      </td>
-      <td class="py-3 px-3">${getStatusBadgeHTML(job.status)}</td>
-      <td class="py-3 px-3 text-right">
-        <button class="btn btn-secondary btn-sm btn-view-job-details" data-job-id="${job.id}">
+      <td class="py-2.5 px-2.5 text-right whitespace-nowrap">
+        <button class="btn btn-secondary btn-xs btn-view-job-details py-1 px-2.5 text-xs" data-job-id="${job.id}">
           View Ticket
         </button>
       </td>

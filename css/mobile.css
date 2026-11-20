@@ -123,6 +123,10 @@
 
 /* Улучшение модальных окон на смартфонах */
 @media (max-width: 640px) {
+  .card {
+    padding: 0.75rem 0.65rem !important;
+  }
+
   .modal-header {
     padding: 0.85rem 1rem !important;
   }
