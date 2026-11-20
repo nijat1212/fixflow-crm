@@ -465,8 +465,17 @@
 }
 
 @keyframes pulse-time {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.2); }
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
 }
 
 /* Tech Job Card Status Border Indicators */
@@ -475,25 +484,35 @@
   border-left-style: solid !important;
   transition: border-left-color 0.2s ease, box-shadow 0.2s ease;
 }
+
 .tech-job-card.status-scheduled,
 .tech-job-card.status-assigned,
 .tech-job-card.status-accepted {
-  border-left-color: #2563eb !important; /* Blue */
+  border-left-color: #2563eb !important;
+  /* Blue */
 }
+
 .tech-job-card.status-en_route,
 .tech-job-card.status-in_route {
-  border-left-color: #4f46e5 !important; /* Indigo */
+  border-left-color: #4f46e5 !important;
+  /* Indigo */
 }
+
 .tech-job-card.status-in_progress,
 .tech-job-card.status-on_site {
-  border-left-color: #7c3aed !important; /* Purple */
+  border-left-color: #7c3aed !important;
+  /* Purple */
 }
+
 .tech-job-card.status-parts_needed,
 .tech-job-card.status-waiting_for_parts {
-  border-left-color: #ea580c !important; /* Orange */
+  border-left-color: #ea580c !important;
+  /* Orange */
 }
+
 .tech-job-card.status-completed {
-  border-left-color: #059669 !important; /* Emerald */
+  border-left-color: #059669 !important;
+  /* Emerald */
 }
 
 /* Dispatcher Table Row Status Left Accent */
@@ -501,39 +520,71 @@
   border-left: 3px solid transparent;
   transition: border-left-color 0.2s ease, background-color 0.15s ease;
 }
+
 .job-table-row.status-available,
 .job-table-row.status-draft_ticket {
   border-left-color: #f59e0b;
 }
+
 .job-table-row.status-scheduled,
 .job-table-row.status-assigned {
   border-left-color: #2563eb;
 }
+
 .job-table-row.status-en_route,
 .job-table-row.status-in_route {
   border-left-color: #4f46e5;
 }
+
 .job-table-row.status-in_progress,
 .job-table-row.status-on_site {
   border-left-color: #7c3aed;
 }
+
 .job-table-row.status-parts_needed {
   border-left-color: #ea580c;
 }
+
 .job-table-row.status-completed {
   border-left-color: #059669;
 }
 
 .calendar-job-card.status-draft_ticket,
-.calendar-job-card.status-available { border-left-color: #f59e0b !important; }
-.calendar-job-card.status-accepted { border-left-color: #0284c7 !important; }
-.calendar-job-card.status-en_route { border-left-color: #4f46e5 !important; }
-.calendar-job-card.status-in_route { border-left-color: #4f46e5 !important; }
-.calendar-job-card.status-on_site { border-left-color: #7c3aed !important; }
-.calendar-job-card.status-in_progress { border-left-color: #7c3aed !important; }
-.calendar-job-card.status-parts_needed { border-left-color: #ea580c !important; }
-.calendar-job-card.status-completed { border-left-color: #059669 !important; }
-.calendar-job-card.status-scheduled { border-left-color: #2563eb !important; }
+.calendar-job-card.status-available {
+  border-left-color: #f59e0b !important;
+}
+
+.calendar-job-card.status-accepted {
+  border-left-color: #0284c7 !important;
+}
+
+.calendar-job-card.status-en_route {
+  border-left-color: #4f46e5 !important;
+}
+
+.calendar-job-card.status-in_route {
+  border-left-color: #4f46e5 !important;
+}
+
+.calendar-job-card.status-on_site {
+  border-left-color: #7c3aed !important;
+}
+
+.calendar-job-card.status-in_progress {
+  border-left-color: #7c3aed !important;
+}
+
+.calendar-job-card.status-parts_needed {
+  border-left-color: #ea580c !important;
+}
+
+.calendar-job-card.status-completed {
+  border-left-color: #059669 !important;
+}
+
+.calendar-job-card.status-scheduled {
+  border-left-color: #2563eb !important;
+}
 
 /* Month Grid */
 .calendar-grid {
@@ -693,6 +744,64 @@
 }
 
 @keyframes slideInRight {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+
+/* ==========================================================
+   Миниатюры фотографий в карточках и деталях заказа
+   ========================================================== */
+.job-photo-thumb {
+  width: 64px !important;
+  height: 64px !important;
+  min-width: 64px;
+  min-height: 64px;
+  object-fit: cover !important;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.job-photo-thumb:hover {
+  transform: scale(1.06);
+  border-color: #3b82f6;
+}
+
+/* Также добавим поддержку утилитных классов, чтобы они работали везде */
+.w-16 {
+  width: 4rem !important;
+}
+
+.h-16 {
+  height: 4rem !important;
+}
+
+.w-12 {
+  width: 3rem !important;
+}
+
+.h-12 {
+  height: 3rem !important;
+}
+
+.w-10 {
+  width: 2.5rem !important;
+}
+
+.h-10 {
+  height: 2.5rem !important;
+}
+
+.object-cover {
+  object-fit: cover !important;
 }

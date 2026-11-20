@@ -31,7 +31,7 @@ const APPLIANCE_ABBR = {
 
 // Start and End hours for the matrix grid
 const START_HOUR = 6;  // 6am
-const END_HOUR = 19;   // 7pm
+const END_HOUR = 20;   // 8pm
 const SLOT_HEIGHT = 50; // px per hour slot
 
 export function renderCalendar() {
@@ -531,6 +531,15 @@ function attachCalendarListeners(weekDays) {
         if (modal) {
           const dateInput = modal.querySelector('input[name="scheduledDate"]');
           if (dateInput) dateInput.value = date;
+          const timeSelect = modal.querySelector('select[name="scheduledTimeWindow"]');
+          if (timeSelect) {
+            if (hour < 10) timeSelect.value = '8:00 AM - 10:00 AM';
+            else if (hour < 12) timeSelect.value = '10:00 AM - 12:00 PM';
+            else if (hour < 14) timeSelect.value = '12:00 PM - 2:00 PM';
+            else if (hour < 16) timeSelect.value = '2:00 PM - 4:00 PM';
+            else if (hour < 18) timeSelect.value = '4:00 PM - 6:00 PM';
+            else timeSelect.value = '6:00 PM - 8:00 PM';
+          }
           modal.classList.add('open');
         }
       });
@@ -568,13 +577,13 @@ function formatShortCustomer(fullName) {
 }
 
 function parseTimeWindow(timeWindow) {
-  if (!timeWindow) return { startHour: 9, duration: 2 };
+  if (!timeWindow) return { startHour: 8, duration: 2 };
   const parts = timeWindow.split('-').map(s => s.trim());
-  if (parts.length < 2) return { startHour: 9, duration: 2 };
+  if (parts.length < 2) return { startHour: 8, duration: 2 };
 
   function toHour(str) {
     const m = str.match(/(\d+):?(\d+)?\s*(AM|PM)?/i);
-    if (!m) return 9;
+    if (!m) return 8;
     let h = parseInt(m[1], 10);
     const min = m[2] ? parseInt(m[2], 10) : 0;
     const period = (m[3] || '').toUpperCase();

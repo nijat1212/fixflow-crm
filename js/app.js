@@ -684,6 +684,10 @@ window.openEditJobModal = function(jobId) {
   document.getElementById('edit-brand').value = job.brand || 'Whirlpool';
   document.getElementById('edit-issueDescription').value = job.issueDescription || '';
   document.getElementById('edit-scheduledDate').value = job.scheduledDate || '';
+  const editTimeSelect = document.getElementById('edit-scheduledTimeWindow');
+  if (editTimeSelect) {
+    editTimeSelect.value = job.scheduledTimeWindow || '8:00 AM - 10:00 AM';
+  }
   document.getElementById('edit-assignedTechId').value = job.assignedTechId || '';
 
   document.getElementById('modal-edit-job').classList.add('open');
